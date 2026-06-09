@@ -1,0 +1,312 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import type { Exercise, Flashcard } from "@/lib/types";
+import {
+  CARDS_PER_BLOCK,
+  getExerciseIndexAfterCard,
+  getInitialLessonState,
+} from "@/lib/lessonFlow";
+import ExerciseGate from "./ExerciseGate";
+import FlipCard from "./FlipCard";
+import LessonPyto from "./LessonPyto";
+import PytoTipBuddy from "./PytoTipBuddy";
+import ProgressBar from "./ProgressBar";
+
+interface FlashcardDeckProps {
+  lessonId: string;
+  lessonTitle: string;
+  cards: Flashcard[];
+  exercises: Exercise[];
+  initialCompletedIds: string[];
+  initialCompletedExerciseIds: string[];
+  initialLessonCompleted: boolean;
+}
+
+type ViewMode = "card" | "exercise" | "done";
+
+export default function FlashcardDeck({
+  lessonId,
+  lessonTitle,
+  cards,
+  exercises,
+  initialCompletedIds,
+  initialCompletedExerciseIds,
+  initialLessonCompleted,
+}: FlashcardDeckProps) {
+  const initial = getInitialLessonState(
+    cards,
+    exercises,
+    initialCompletedIds,
+    initialCompletedExerciseIds,
+    initialLessonCompleted
+  );
+
+  const [completedIds, setCompletedIds] = useState<string[]>(initialCompletedIds);
+  const [completedExerciseIds, setCompletedExerciseIds] = useState<string[]>(
+    initialCompletedExerciseIds
+  );
+  const [mode, setMode] = useState<ViewMode>(initial.mode);
+  const [currentIndex, setCurrentIndex] = useState(initial.cardIndex);
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState<number | null>(
+    initial.exerciseIndex
+  );
+  const [flipped, setFlipped] = useState(false);
+  const [hasViewedBack, setHasViewedBack] = useState(false);
+  const [savingExercise, setSavingExercise] = useState(false);
+
+  const currentCard = cards[currentIndex];
+  const currentExercise =
+    activeExerciseIndex !== null ? exercises[activeExerciseIndex] : null;
+
+  const saveCardProgress = useCallback(
+    async (cardId: string) => {
+      const res = await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId, cardId }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setCompletedIds(data.lessonProgress.completedCardIds);
+    },
+    [lessonId]
+  );
+
+  const toggleExerciseComplete = useCallback(async () => {
+    if (!currentExercise) return;
+    setSavingExercise(true);
+    const res = await fetch("/api/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lessonId,
+        exerciseId: currentExercise.id,
+        type: "exercise",
+      }),
+    });
+    setSavingExercise(false);
+    if (!res.ok) return;
+    const data = await res.json();
+    setCompletedExerciseIds(data.completedExerciseIds);
+  }, [lessonId, currentExercise]);
+
+  const handleFlip = useCallback(() => {
+    setFlipped((prev) => {
+      if (!prev) setHasViewedBack(true);
+      return !prev;
+    });
+  }, []);
+
+  const finishLesson = useCallback(() => {
+    setMode("done");
+  }, []);
+
+  const continueFromExercise = useCallback(() => {
+    if (activeExerciseIndex === null) return;
+
+    const nextCardIndex = (activeExerciseIndex + 1) * CARDS_PER_BLOCK;
+    if (nextCardIndex >= cards.length) {
+      finishLesson();
+      return;
+    }
+
+    setCurrentIndex(nextCardIndex);
+    setMode("card");
+    setActiveExerciseIndex(null);
+    setFlipped(false);
+    setHasViewedBack(false);
+  }, [activeExerciseIndex, cards.length, finishLesson]);
+
+  const goNextCard = useCallback(async () => {
+    if (!currentCard) return;
+
+    if (!completedIds.includes(currentCard.id)) {
+      await saveCardProgress(currentCard.id);
+    }
+
+    const exerciseIdx = getExerciseIndexAfterCard(currentIndex);
+    if (exerciseIdx !== null && exercises[exerciseIdx]) {
+      setActiveExerciseIndex(exerciseIdx);
+      setMode("exercise");
+      setFlipped(false);
+      setHasViewedBack(false);
+      return;
+    }
+
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= cards.length) {
+      finishLesson();
+      return;
+    }
+
+    setCurrentIndex(nextIndex);
+    setFlipped(false);
+    setHasViewedBack(false);
+  }, [
+    currentCard,
+    completedIds,
+    currentIndex,
+    cards.length,
+    exercises,
+    saveCardProgress,
+    finishLesson,
+  ]);
+
+  const completedCount = useMemo(
+    () => cards.filter((c) => completedIds.includes(c.id)).length,
+    [cards, completedIds]
+  );
+
+  const exerciseCompletedCount = useMemo(
+    () => exercises.filter((e) => completedExerciseIds.includes(e.id)).length,
+    [exercises, completedExerciseIds]
+  );
+
+  if (cards.length === 0) {
+    return (
+      <div className="alert alert-info">
+        <span>Noch keine Lernkarten in dieser Lektion.</span>
+      </div>
+    );
+  }
+
+  const pytoSection = (
+    <LessonPyto
+      completedCards={completedCount}
+      totalCards={cards.length}
+      onExercise={mode === "exercise"}
+    />
+  );
+
+  if (mode === "done") {
+    return (
+      <div className="flex flex-col gap-6 py-8">
+        {pytoSection}
+        <div className="flex flex-col items-center gap-6">
+        <div className="text-6xl">🎉</div>
+        <h2 className="text-2xl font-bold text-center">
+          {lessonTitle} abgeschlossen!
+        </h2>
+        <p className="text-center opacity-70 max-w-md">
+          Du hast alle {cards.length} Lernkarten und {exercises.length}{" "}
+          Übungen durchgearbeitet.
+        </p>
+        <ProgressBar value={cards.length} max={cards.length} label="Lernkarten" />
+        <ProgressBar
+          value={exerciseCompletedCount}
+          max={exercises.length}
+          label="Übungen"
+        />
+        <div className="flex gap-3">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              const reset = getInitialLessonState(cards, exercises, [], [], false);
+              setCompletedIds([]);
+              setCompletedExerciseIds([]);
+              setMode(reset.mode === "done" ? "card" : reset.mode);
+              setCurrentIndex(0);
+              setActiveExerciseIndex(null);
+              setFlipped(false);
+              setHasViewedBack(false);
+            }}
+          >
+            Von vorne wiederholen
+          </button>
+          <a href="/" className="btn btn-ghost">
+            Zur Übersicht
+          </a>
+        </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "exercise" && currentExercise && activeExerciseIndex !== null) {
+    const isExerciseDone = completedExerciseIds.includes(currentExercise.id);
+
+    return (
+      <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
+        {pytoSection}
+        <ProgressBar
+          value={completedCount}
+          max={cards.length}
+          label={`${completedCount} von ${cards.length} Fragen · Übung ${activeExerciseIndex + 1} von ${exercises.length}`}
+        />
+
+        <ExerciseGate
+          exercise={currentExercise}
+          index={activeExerciseIndex}
+          isCompleted={isExerciseDone}
+          saving={savingExercise}
+          onToggleComplete={toggleExerciseComplete}
+        />
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={continueFromExercise}
+            disabled={!isExerciseDone}
+            title={
+              isExerciseDone
+                ? undefined
+                : "Hake die Übung ab, um mit den nächsten Fragen fortzufahren"
+            }
+          >
+            {activeExerciseIndex + 1 >= exercises.length &&
+            (activeExerciseIndex + 1) * CARDS_PER_BLOCK >= cards.length
+              ? "Lektion abschließen"
+              : "Weiter zu den nächsten Fragen"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
+      <ProgressBar
+        value={completedCount}
+        max={cards.length}
+        label={`Frage ${currentIndex + 1} von ${cards.length}`}
+      />
+
+      <div className="flex flex-col md:flex-row gap-4 items-stretch">
+        <div className="flex-1 min-w-0">
+          <FlipCard
+            key={currentCard.id}
+            card={currentCard}
+            flipped={flipped}
+            onFlip={handleFlip}
+          />
+        </div>
+        <div className="md:w-52 lg:w-56 shrink-0 flex justify-center md:justify-start">
+          <PytoTipBuddy
+            key={currentCard.id}
+            card={currentCard}
+            disabled={flipped}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={goNextCard}
+          disabled={!hasViewedBack}
+          title={
+            hasViewedBack
+              ? undefined
+              : "Drehe die Karte mit der Glühbirne um, um fortzufahren"
+          }
+        >
+          Weiter
+        </button>
+      </div>
+    </div>
+  );
+}

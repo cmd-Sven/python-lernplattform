@@ -1,0 +1,56 @@
+[
+  {
+    "id": "ex1-01",
+    "lessonId": "lektion-1",
+    "order": 1,
+    "title": "Variablen und Datentypen erkunden",
+    "task": "Lege drei Variablen an: `name` (String), `alter` (int) und `groesse` (float). Gib für jede Variable den Wert und den Typ mit `print()` und `type()` aus.",
+    "solution": "Erstelle die drei Variablen mit passenden Werten. Nutze `print(name, type(name))` (oder separate Zeilen) für jede Variable. So siehst du Wert und Typ nebeneinander – genau das wird in der PCEP-Prüfung oft abgefragt.",
+    "notes": "Achte darauf, dass `42` ein int und `42.0` ein float ist. Strings stehen in Anführungszeichen.",
+    "starterCode": "name = \"Sven\"\nalter = 25\ngroesse = 1.80\n\n# Gib hier Wert und Typ aus:",
+    "solutionCode": "name = \"Sven\"\nalter = 25\ngroesse = 1.80\n\nprint(name, type(name))\nprint(alter, type(alter))\nprint(groesse, type(groesse))"
+  },
+  {
+    "id": "ex1-02",
+    "lessonId": "lektion-1",
+    "order": 2,
+    "title": "Mini-Rechner",
+    "task": "Schreibe ein Programm, das zwei Zahlen `a = 17` und `b = 5` speichert und ausgibt: Summe, Differenz, Produkt, ganzzahlige Division (`//`), Rest (`%`) und Potenz (`a ** 2`).",
+    "solution": "Nutze die arithmetischen Operatoren direkt in `print()`-Aufrufen. Für `//` und `%` merke dir: 17 // 5 = 3 und 17 % 5 = 2. Die Potenz von a mit 2 ist 289.",
+    "notes": "Verwechsle `/` (float-Division) nicht mit `//` (ganzzahlige Division). In PCEP werden beide geprüft.",
+    "solutionCode": "a = 17\nb = 5\n\nprint(\"Summe:\", a + b)\nprint(\"Differenz:\", a - b)\nprint(\"Produkt:\", a * b)\nprint(\"Ganzzahl:\", a // b)\nprint(\"Rest:\", a % b)\nprint(\"a²:\", a ** 2)"
+  },
+  {
+    "id": "ex1-03",
+    "lessonId": "lektion-1",
+    "order": 3,
+    "title": "Eingabe und Begrüßung",
+    "task": "Frage den Nutzer mit `input()` nach seinem Namen und seinem Alter. Wandle das Alter in eine Ganzzahl um und gib aus: `Hallo [Name], nächstes Jahr bist du [Alter+1]!`",
+    "solution": "`input()` liefert immer einen String – auch wenn der Nutzer eine Zahl tippt. Wandle das Alter mit `int()` um, bevor du rechnest. Verwende einen f-String für die formatierte Ausgabe.",
+    "notes": "Ohne `int()` bekommst du bei `\"25\" + 1` einen TypeError. Teste auch mit Buchstaben als Alter – was passiert?",
+    "starterCode": "name = input(\"Wie heißt du? \")\nalter = input(\"Wie alt bist du? \")\n\n# Wandle um und grüße:",
+    "solutionCode": "name = input(\"Wie heißt du? \")\nalter = int(input(\"Wie alt bist du? \"))\n\nprint(f\"Hallo {name}, nächstes Jahr bist du {alter + 1}!\")"
+  },
+  {
+    "id": "ex1-04",
+    "lessonId": "lektion-1",
+    "order": 4,
+    "title": "String-Operationen",
+    "task": "Gegeben: `wort = \"Python\"`. Gib aus: (1) die Länge, (2) das Wort dreimal wiederholt mit `*`, (3) die ersten 3 Zeichen mit Slicing `[:3]`, (4) `Py` + `thon` per Verkettung.",
+    "solution": "`len(wort)` zählt Zeichen. `3 * wort` wiederholt den String. Slicing `wort[:3]` liefert `\"Pyt\"`. Verkettung mit `+` ergibt wieder `\"Python\"`.",
+    "notes": "Slicing kommt in PCEP Modul 3 ausführlicher – hier schon mal vorkosten. Indizes starten bei 0.",
+    "starterCode": "wort = \"Python\"\n\n# Deine Ausgaben:",
+    "solutionCode": "wort = \"Python\"\n\nprint(len(wort))\nprint(3 * wort)\nprint(wort[:3])\nprint(\"Py\" + \"thon\")"
+  },
+  {
+    "id": "ex1-05",
+    "lessonId": "lektion-1",
+    "order": 5,
+    "title": "Truthy & Falsy testen",
+    "task": "Erstelle eine Liste von Werten: `0`, `\"\"`, `\"hello\"`, `None`, `False`, `[1]`. Schreibe eine Schleife, die für jeden Wert `print(wert, bool(wert))` ausgibt.",
+    "solution": "Mit `bool()` wandelst du jeden Wert in True/False um. Falsy sind: 0, leerer String, None, False, leere Listen. Alles andere ist truthy – wichtig für spätere if-Bedingungen.",
+    "notes": "Das Thema kommt in Lektion 2 (Kontrollstrukturen) wieder. Merke dir die wichtigsten falsy-Werte auswendig.",
+    "starterCode": "werte = [0, \"\", \"hello\", None, False, [1]]\n\nfor wert in werte:\n    # bool() hier nutzen\n    pass",
+    "solutionCode": "werte = [0, \"\", \"hello\", None, False, [1]]\n\nfor wert in werte:\n    print(wert, bool(wert))"
+  }
+]
