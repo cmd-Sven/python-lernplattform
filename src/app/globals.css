@@ -253,6 +253,72 @@ body {
   }
 }
 
+.lesson-achievement-badge {
+  position: absolute;
+  top: -0.65rem;
+  right: -0.65rem;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.22));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.lesson-achievement-badge:hover {
+  transform: scale(1.08) rotate(-4deg);
+  filter: drop-shadow(0 6px 12px rgb(0 0 0 / 0.28));
+}
+
+.lesson-achievement-badge:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+.lesson-achievement-badge__ribbon {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, #ffd76a 0%, #f5a623 45%, #d4880d 100%);
+  border: 2px solid #fff8e6;
+  box-shadow: inset 0 2px 4px rgb(255 255 255 / 0.45),
+    inset 0 -3px 6px rgb(0 0 0 / 0.18);
+}
+
+.lesson-achievement-badge__medal {
+  position: relative;
+  z-index: 1;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: #7a4a00;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+[data-theme="dark"] .lesson-achievement-badge__ribbon {
+  border-color: #ffe9a8;
+}
+
+[data-theme="contrast"] .lesson-achievement-badge__ribbon {
+  border-width: 3px;
+  border-color: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-achievement-badge {
+    transition: none;
+  }
+
+  .lesson-achievement-badge:hover {
+    transform: none;
+  }
+}
+
 /* Rich-Text in Karten & Übungen (Light / Dark / Kontrast) */
 .rich-content {
   line-height: 1.65;

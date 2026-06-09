@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LessonWithAccess } from "@/lib/lessonAccess";
+import LessonAchievementBadge from "./LessonAchievementBadge";
 import ProgressBar from "./ProgressBar";
 
 interface LessonCardProps {
@@ -22,9 +23,12 @@ export default function LessonCard({ lesson }: LessonCardProps) {
     <span className="badge badge-ghost">Neu</span>
   );
 
+  const showAchievement =
+    lesson.lessonNumber === 1 && lesson.lessonCompleted && !isComingSoon;
+
   return (
     <div
-      className={`card bg-base-100 shadow-md border transition-shadow ${
+      className={`card bg-base-100 shadow-md border transition-shadow relative overflow-visible ${
         isComingSoon
           ? "border-dashed border-base-300 opacity-80"
           : isLocked
@@ -32,6 +36,10 @@ export default function LessonCard({ lesson }: LessonCardProps) {
             : "border-base-300 hover:shadow-lg"
       }`}
     >
+      <LessonAchievementBadge
+        lessonTitle={lesson.title}
+        show={showAchievement}
+      />
       <div className="card-body">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h2 className="card-title text-lg">{lesson.title}</h2>
