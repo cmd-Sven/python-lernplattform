@@ -16,7 +16,9 @@ import {
   PROGRESS_UPDATED_EVENT,
   type LessonWithCardCount,
 } from "@/lib/visitorProgress";
+import { scheduleLearnerBoardSync } from "@/lib/learnerSync";
 import LessonCard from "./LessonCard";
+import LearnerMonitor from "./LearnerMonitor";
 import ProgressBar from "./ProgressBar";
 import PytoMascot from "./PytoMascot";
 
@@ -67,6 +69,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
   useEffect(() => {
     if (!hydrated || !onboarded) return;
     markVisitorReturning();
+    scheduleLearnerBoardSync();
   }, [hydrated, onboarded]);
 
   useEffect(() => {
@@ -95,6 +98,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     setOnboarded(true);
     setIsReturning(false);
     setError("");
+    scheduleLearnerBoardSync();
   }
 
   function handleReset() {
@@ -205,6 +209,8 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
           />
         </div>
       </section>
+
+      <LearnerMonitor />
 
       <section>
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">

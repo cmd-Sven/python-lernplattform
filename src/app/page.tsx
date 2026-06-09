@@ -1,18 +1,20 @@
-import { getCards, getPublishedLessons } from "@/lib/data";
+import { getCards, getExercises, getPublishedLessons } from "@/lib/data";
 import HomeClient from "@/components/HomeClient";
 import type { LessonWithCardCount } from "@/lib/visitorProgress";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [lessons, cards] = await Promise.all([
+  const [lessons, cards, exercises] = await Promise.all([
     getPublishedLessons(),
     getCards(),
+    getExercises(),
   ]);
 
   const lessonsWithCounts: LessonWithCardCount[] = lessons.map((lesson) => ({
     ...lesson,
     cardCount: cards.filter((c) => c.lessonId === lesson.id).length,
+    exerciseCount: exercises.filter((e) => e.lessonId === lesson.id).length,
   }));
 
   return <HomeClient lessons={lessonsWithCounts} />;

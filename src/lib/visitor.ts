@@ -1,6 +1,7 @@
 const VISITOR_NAME_KEY = "pcep-visitor-name";
 const VISITOR_ONBOARDED_KEY = "pcep-visitor-onboarded";
 const VISITOR_RETURNING_KEY = "pcep-visitor-returning";
+const VISITOR_ID_KEY = "pcep-visitor-id";
 
 export function getVisitorState(): {
   name: string;
@@ -17,7 +18,18 @@ export function getVisitorState(): {
   };
 }
 
+export function getOrCreateVisitorId(): string {
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem(VISITOR_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(VISITOR_ID_KEY, id);
+  }
+  return id;
+}
+
 export function setVisitorOnboarded(name: string): void {
+  getOrCreateVisitorId();
   localStorage.setItem(VISITOR_NAME_KEY, name.trim());
   localStorage.setItem(VISITOR_ONBOARDED_KEY, "true");
   localStorage.removeItem(VISITOR_RETURNING_KEY);

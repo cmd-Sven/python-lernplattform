@@ -2,8 +2,18 @@
 
 import { useState } from "react";
 import type { Exercise } from "@/lib/types";
+import dynamic from "next/dynamic";
 import CodeBlock from "./CodeBlock";
-import PythonPlayground from "./PythonPlayground";
+
+const PythonPlayground = dynamic(() => import("./PythonPlayground"), {
+  ssr: false,
+  loading: () => (
+    <div className="alert alert-info py-2 text-sm">
+      <span className="loading loading-spinner loading-sm" />
+      Code-Editor wird geladen…
+    </div>
+  ),
+});
 
 interface ExerciseGateProps {
   exercise: Exercise;

@@ -1,3 +1,4 @@
+import { scheduleLearnerBoardSync } from "./learnerSync";
 import { syncLessonCompletion } from "./progressSync";
 import type {
   Exercise,
@@ -31,6 +32,7 @@ function writeList(lessonProgress: LessonProgress[]) {
     }),
   );
   window.dispatchEvent(new Event(PROGRESS_UPDATED_EVENT));
+  scheduleLearnerBoardSync();
 }
 
 function getOrCreateLesson(
@@ -111,7 +113,10 @@ export function toggleExerciseComplete(
   return [...lp.completedExerciseIds!];
 }
 
-export type LessonWithCardCount = Lesson & { cardCount: number };
+export type LessonWithCardCount = Lesson & {
+  cardCount: number;
+  exerciseCount?: number;
+};
 
 export function enrichLessonsWithProgress(
   lessons: LessonWithCardCount[],

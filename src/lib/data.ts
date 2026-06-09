@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
-import type { Exercise, Flashcard, Lesson, SiteProgress } from "./types";
+import type { StoredLearner } from "./learnerBoard";
+import type { Exercise, Flashcard, Lesson, LessonProgress, SiteProgress } from "./types";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase/server";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -9,6 +10,7 @@ const lessonsPath = path.join(DATA_DIR, "lessons.json");
 const cardsPath = path.join(DATA_DIR, "cards.json");
 const exercisesPath = path.join(DATA_DIR, "exercises.json");
 const progressPath = path.join(DATA_DIR, "progress.json");
+const learnersPath = path.join(DATA_DIR, "learners.json");
 
 async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   try {
@@ -374,4 +376,76 @@ export async function saveProgress(progress: SiteProgress): Promise<void> {
 
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+type LearnerRow = {
+  id: string;
+  display_name: string;
+  lesson_progress: LessonProgress[];
+  updated_at: string;
+};
+
+function mapLearner(row: LearnerRow): StoredLearner {
+  return {
+    id: row.id,
+    displayName: row.display_name,
+    lessonProgress: row.lesson_progress ?? [],
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function getLearnerRecords(): Promise<StoredLearner[]> {
+  if (isSupabaseConfigured()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("pcep_learners")
+      .select("*")
+      .neq("display_name", "")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []).map((row) => mapLearner(row as LearnerRow));
+  }
+
+  return readJson<StoredLearner[]>(learnersPath, []);
+}
+
+export async function upsertLearnerRecord(
+  id: string,
+  displayName: string,
+  lessonProgress: LessonProgress[],
+): Promise<StoredLearner> {
+  const updatedAt = new Date().toISOString();
+  const trimmedName = displayName.trim();
+
+  if (isSupabaseConfigured()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("pcep_learners")
+      .upsert(
+        {
+          id,
+          display_name: trimmedName,
+          lesson_progress: lessonProgress,
+          updated_at: updatedAt,
+        },
+        { onConflict: "id" },
+      )
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return mapLearner(data as LearnerRow);
+  }
+
+  const learners = await readJson<StoredLearner[]>(learnersPath, []);
+  const next: StoredLearner = {
+    id,
+    displayName: trimmedName,
+    lessonProgress,
+    updatedAt,
+  };
+  const idx = learners.findIndex((learner) => learner.id === id);
+  if (idx >= 0) learners[idx] = next;
+  else learners.push(next);
+  await writeJson(learnersPath, learners);
+  return next;
 }
