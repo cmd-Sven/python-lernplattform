@@ -4,6 +4,7 @@ import {
   getLessonById,
   getProgress,
 } from "@/lib/data";
+import { hasEverCompletedLesson } from "@/lib/lessonCompletion";
 
 export async function GET(
   _request: Request,
@@ -27,6 +28,7 @@ export async function GET(
     lesson,
     cards,
     completedCardIds: lessonProgress?.completedCardIds ?? [],
-    lessonCompleted: lessonProgress?.lessonCompleted ?? false,
+    lessonCompleted: hasEverCompletedLesson(lessonProgress),
+    completionCount: lessonProgress?.completionCount ?? 0,
   });
 }

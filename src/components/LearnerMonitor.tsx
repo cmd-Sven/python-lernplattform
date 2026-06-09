@@ -97,7 +97,26 @@ export default function LearnerMonitor() {
               )}
               {" – "}
               Lektion {entry.lessonNumber} Fragen + Übungen{" "}
-              <strong>{entry.percentComplete}%</strong> abgeschlossen.
+              <strong>{entry.percentComplete}%</strong> abgeschlossen
+              {entry.completionCount > 0 && (
+                <>
+                  {" · "}
+                  {entry.completionCount > 1 ? (
+                    <strong>{entry.completionCount - 1}× wiederholt</strong>
+                  ) : (
+                    <span>1× abgeschlossen</span>
+                  )}
+                  {entry.isRepeating && (
+                    <>
+                      {" "}
+                      <span className="opacity-75">
+                        (aktuell {entry.currentRunPercent}%)
+                      </span>
+                    </>
+                  )}
+                </>
+              )}
+              .
             </span>
           </li>
         ))}

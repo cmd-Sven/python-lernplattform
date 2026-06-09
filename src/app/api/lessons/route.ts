@@ -5,6 +5,10 @@ import {
   getProgress,
   getPublishedLessons,
 } from "@/lib/data";
+import {
+  getCompletionCount,
+  hasEverCompletedLesson,
+} from "@/lib/lessonCompletion";
 import type { LessonWithStats } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -26,7 +30,8 @@ export async function GET(request: Request) {
       ...lesson,
       cardCount: lessonCards.length,
       completedCards,
-      lessonCompleted: lp?.lessonCompleted ?? false,
+      lessonCompleted: hasEverCompletedLesson(lp),
+      completionCount: getCompletionCount(lp),
     };
   });
 

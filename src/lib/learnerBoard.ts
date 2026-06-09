@@ -1,3 +1,4 @@
+import { getCompletionCount } from "./lessonCompletion";
 import type { LessonProgress } from "./types";
 
 export interface LessonMeta {
@@ -21,11 +22,14 @@ export interface LearnerBoardEntry {
   lessonNumber: number;
   lessonTitle: string;
   percentComplete: number;
+  currentRunPercent: number;
+  completionCount: number;
+  isRepeating: boolean;
   label: string;
   isCurrentUser?: boolean;
 }
 
-export function lessonPercent(
+export function lessonCurrentPercent(
   lesson: LessonMeta,
   progress: LessonProgress[],
 ): number {
@@ -35,6 +39,39 @@ export function lessonPercent(
   const total = lesson.cardCount + lesson.exerciseCount;
   if (total === 0) return 100;
   return Math.round(((cardsDone + exercisesDone) / total) * 100);
+}
+
+function lessonIsFinishedForBoard(
+  lesson: LessonMeta,
+  progress: LessonProgress[],
+): boolean {
+  const lp = progress.find((p) => p.lessonId === lesson.id);
+  return getCompletionCount(lp) > 0;
+}
+
+function buildLearnerLabel(
+  displayName: string,
+  lessonNumber: number,
+  percentComplete: number,
+  completionCount: number,
+  currentRunPercent: number,
+  isRepeating: boolean,
+): string {
+  let label = `${displayName} – Lektion ${lessonNumber} Fragen + Übungen ${percentComplete}% abgeschlossen`;
+
+  if (completionCount > 0) {
+    const repeats = completionCount - 1;
+    if (repeats > 0) {
+      label += ` · ${repeats}× wiederholt`;
+    } else {
+      label += ` · 1× abgeschlossen`;
+    }
+    if (isRepeating) {
+      label += ` (aktuell ${currentRunPercent}%)`;
+    }
+  }
+
+  return `${label}.`;
 }
 
 export function formatLearnerStatus(
@@ -47,12 +84,21 @@ export function formatLearnerStatus(
   if (sorted.length === 0) return null;
 
   const activeLesson =
-    sorted.find((lesson) => lessonPercent(lesson, lessonProgress) < 100) ??
+    sorted.find((lesson) => !lessonIsFinishedForBoard(lesson, lessonProgress)) ??
     sorted[sorted.length - 1];
 
   const lessonNumber =
     sorted.findIndex((lesson) => lesson.id === activeLesson.id) + 1;
-  const percentComplete = lessonPercent(activeLesson, lessonProgress);
+
+  const lp = lessonProgress.find((p) => p.lessonId === activeLesson.id);
+  const completionCount = getCompletionCount(lp);
+  const currentRunPercent = lessonCurrentPercent(activeLesson, lessonProgress);
+  const percentComplete =
+    completionCount > 0 ? 100 : currentRunPercent;
+  const isRepeating =
+    completionCount > 0 &&
+    !lp?.lessonCompleted &&
+    currentRunPercent < 100;
 
   return {
     id,
@@ -60,7 +106,17 @@ export function formatLearnerStatus(
     lessonNumber,
     lessonTitle: activeLesson.title,
     percentComplete,
-    label: `${displayName} – Lektion ${lessonNumber} Fragen + Übungen ${percentComplete}% abgeschlossen.`,
+    currentRunPercent,
+    completionCount,
+    isRepeating,
+    label: buildLearnerLabel(
+      displayName,
+      lessonNumber,
+      percentComplete,
+      completionCount,
+      currentRunPercent,
+      isRepeating,
+    ),
   };
 }
 

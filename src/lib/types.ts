@@ -40,6 +40,8 @@ export interface LessonProgress {
   completedExerciseIds?: string[];
   lessonCompleted: boolean;
   completedAt?: string;
+  /** Wie oft die Lektion vollständig abgeschlossen wurde. */
+  completionCount?: number;
 }
 
 export interface SiteProgress {
@@ -53,4 +55,5 @@ export interface LessonWithStats extends Lesson {
   cardCount: number;
   completedCards: number;
   lessonCompleted: boolean;
+  completionCount: number;
 }

@@ -8,7 +8,7 @@ import {
   getInitialLessonState,
 } from "@/lib/lessonFlow";
 import {
-  clearLessonProgress,
+  restartLessonProgress,
   getLessonProgress,
   markCardComplete,
   toggleExerciseComplete,
@@ -180,7 +180,7 @@ export default function FlashcardDeck({
   }, [currentIndex, exercises]);
 
   const restartLesson = useCallback(() => {
-    clearLessonProgress(lessonId);
+    restartLessonProgress(lessonId);
     const reset = getInitialLessonState(cards, exercises, [], [], false);
     setCompletedIds([]);
     setCompletedExerciseIds([]);

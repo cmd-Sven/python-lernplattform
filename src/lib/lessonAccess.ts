@@ -1,3 +1,4 @@
+import { hasEverCompletedLesson } from "./lessonCompletion";
 import type { Lesson, LessonProgress, LessonWithStats } from "./types";
 
 export type LessonAccessState = "available" | "locked" | "coming_soon";
@@ -36,7 +37,7 @@ export function isLessonUnlocked(
   if (!previous) return true;
 
   const previousProgress = progress.find((item) => item.lessonId === previous.id);
-  return previousProgress?.lessonCompleted ?? false;
+  return hasEverCompletedLesson(previousProgress);
 }
 
 export function getLessonAccessState(

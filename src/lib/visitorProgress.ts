@@ -1,3 +1,8 @@
+import {
+  getCompletionCount,
+  hasEverCompletedLesson,
+  normalizeCompletionCount,
+} from "./lessonCompletion";
 import { scheduleLearnerBoardSync } from "./learnerSync";
 import { syncLessonCompletion } from "./progressSync";
 import type {
@@ -17,7 +22,11 @@ function readList(): LessonProgress[] {
     const raw = localStorage.getItem(PROGRESS_KEY);
     if (!raw) return [];
     const data = JSON.parse(raw) as { lessonProgress?: LessonProgress[] };
-    return data.lessonProgress ?? [];
+    const list = data.lessonProgress ?? [];
+    for (const lp of list) {
+      normalizeCompletionCount(lp);
+    }
+    return list;
   } catch {
     return [];
   }
@@ -74,6 +83,20 @@ export function clearLessonProgress(lessonId: string): void {
   writeList(list);
 }
 
+/** Setzt den aktuellen Durchlauf zurück, behält Abschluss-Zähler. */
+export function restartLessonProgress(lessonId: string): void {
+  const list = readList();
+  const lp = list.find((p) => p.lessonId === lessonId);
+  if (!lp) return;
+
+  normalizeCompletionCount(lp);
+  lp.completedCardIds = [];
+  lp.completedExerciseIds = [];
+  lp.lessonCompleted = false;
+  delete lp.completedAt;
+  writeList(list);
+}
+
 export function markCardComplete(
   lessonId: string,
   cardId: string,
@@ -127,7 +150,8 @@ export function enrichLessonsWithProgress(
     return {
       ...lesson,
       completedCards: lp?.completedCardIds.length ?? 0,
-      lessonCompleted: lp?.lessonCompleted ?? false,
+      lessonCompleted: hasEverCompletedLesson(lp),
+      completionCount: getCompletionCount(lp),
     };
   });
 }
@@ -135,6 +159,6 @@ export function enrichLessonsWithProgress(
 export function computeProgressTotals(lessons: LessonWithStats[]) {
   const totalCards = lessons.reduce((sum, l) => sum + l.cardCount, 0);
   const totalCompleted = lessons.reduce((sum, l) => sum + l.completedCards, 0);
-  const lessonsDone = lessons.filter((l) => l.lessonCompleted).length;
+  const lessonsDone = lessons.filter((l) => l.completionCount > 0).length;
   return { totalCards, totalCompleted, lessonsDone };
 }

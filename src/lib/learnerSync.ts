@@ -1,3 +1,4 @@
+import { normalizeCompletionCount } from "./lessonCompletion";
 import { getOrCreateVisitorId, getVisitorState } from "./visitor";
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -23,7 +24,10 @@ export async function syncLearnerBoard(): Promise<void> {
 
   const visitorId = getOrCreateVisitorId();
   const { getLessonProgressList } = await import("./visitorProgress");
-  const lessonProgress = getLessonProgressList();
+  const lessonProgress = getLessonProgressList().map((lp) => {
+    normalizeCompletionCount(lp);
+    return lp;
+  });
 
   try {
     await fetch("/api/learners", {

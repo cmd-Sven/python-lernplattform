@@ -14,6 +14,7 @@ export function syncLessonCompletion(
     if (!lp.lessonCompleted) {
       lp.lessonCompleted = true;
       lp.completedAt = new Date().toISOString();
+      lp.completionCount = (lp.completionCount ?? 0) + 1;
     }
   } else {
     lp.lessonCompleted = false;
