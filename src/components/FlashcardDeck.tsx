@@ -15,6 +15,7 @@ import {
 } from "@/lib/visitorProgress";
 import ExerciseGate from "./ExerciseGate";
 import FlipCard from "./FlipCard";
+import LessonCompleteModal from "./LessonCompleteModal";
 import LessonPyto from "./LessonPyto";
 import PytoTipBuddy from "./PytoTipBuddy";
 import ProgressBar from "./ProgressBar";
@@ -45,6 +46,7 @@ export default function FlashcardDeck({
   const [flipped, setFlipped] = useState(false);
   const [hasViewedBack, setHasViewedBack] = useState(false);
   const [savingExercise, setSavingExercise] = useState(false);
+  const [celebrationOpen, setCelebrationOpen] = useState(false);
 
   useEffect(() => {
     const lp = getLessonProgress(lessonId);
@@ -98,6 +100,7 @@ export default function FlashcardDeck({
 
   const finishLesson = useCallback(() => {
     setMode("done");
+    setCelebrationOpen(true);
   }, []);
 
   const continueFromExercise = useCallback(() => {
@@ -161,6 +164,7 @@ export default function FlashcardDeck({
     setActiveExerciseIndex(null);
     setFlipped(false);
     setHasViewedBack(false);
+    setCelebrationOpen(false);
   }, [lessonId, cards, exercises]);
 
   const completedCount = useMemo(
@@ -199,10 +203,15 @@ export default function FlashcardDeck({
 
   if (mode === "done") {
     return (
-      <div className="flex flex-col gap-6 py-8">
+      <>
+        <LessonCompleteModal
+          open={celebrationOpen}
+          lessonTitle={lessonTitle}
+          onClose={() => setCelebrationOpen(false)}
+        />
+        <div className="flex flex-col gap-6 py-8">
         {pytoSection}
         <div className="flex flex-col items-center gap-6">
-          <div className="text-6xl">🎉</div>
           <h2 className="text-2xl font-bold text-center">
             {lessonTitle} abgeschlossen!
           </h2>
@@ -226,6 +235,7 @@ export default function FlashcardDeck({
           </div>
         </div>
       </div>
+      </>
     );
   }
 

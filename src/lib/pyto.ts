@@ -1,3 +1,6 @@
+export const PYTO_LESSON_COMPLETE_VIDEO =
+  "/images/pyto/Lesson_complete.mp4";
+
 export const PYTO_IMAGES = {
   tutor: "/images/pyto/pyto_tutor.png",
   froehlich: "/images/pyto/pyto_froehliches_winken.png",

@@ -7,6 +7,7 @@ import { getPytoForHome } from "@/lib/pyto";
 import {
   clearAllVisitorData,
   getVisitorState,
+  markVisitorReturning,
   setVisitorOnboarded,
 } from "@/lib/visitor";
 import {
@@ -36,6 +37,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
   const [name, setName] = useState("");
   const [nameInput, setNameInput] = useState("");
   const [error, setError] = useState("");
@@ -57,9 +59,15 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     const visitor = getVisitorState();
     setName(visitor.name);
     setOnboarded(visitor.onboarded);
+    setIsReturning(visitor.returning);
     refreshProgress();
     setHydrated(true);
   }, [refreshProgress]);
+
+  useEffect(() => {
+    if (!hydrated || !onboarded) return;
+    markVisitorReturning();
+  }, [hydrated, onboarded]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -85,6 +93,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     setVisitorOnboarded(trimmed);
     setName(trimmed);
     setOnboarded(true);
+    setIsReturning(false);
     setError("");
   }
 
@@ -101,6 +110,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     setName("");
     setNameInput("");
     setOnboarded(false);
+    setIsReturning(false);
     refreshProgress();
   }
 
@@ -165,7 +175,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
       <section className="dashboard-hero rounded-2xl shadow-md border-2 border-base-300 mb-8 overflow-hidden">
         <div className="p-6 sm:p-10">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            Willkommen zurück, {name}!
+            {isReturning ? "Willkommen zurück" : "Willkommen"}, {name}!
           </h1>
           <p className="text-lg opacity-80 mb-6">
             Du hast bereits <strong>{totalCompleted}</strong>{" "}

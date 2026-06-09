@@ -25,8 +25,10 @@ export default function PytoMascot({
   const { img, bubble } = SIZES[size];
 
   return (
-    <div className={`pyto-mascot flex flex-col sm:flex-row items-center gap-4 ${className}`}>
-      <div className="pyto-bubble relative order-2 sm:order-1 flex-1">
+    <div
+      className={`pyto-mascot flex w-full flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 ${className}`}
+    >
+      <div className="pyto-bubble relative order-2 sm:order-1">
         <div
           className={`bg-base-100 border-2 border-base-300 rounded-2xl rounded-br-sm px-5 py-4 shadow-md ${bubble}`}
         >
@@ -34,12 +36,16 @@ export default function PytoMascot({
           <span className="text-xs opacity-50 mt-2 block">— Pyto, dein Lerntutor</span>
         </div>
         <div
-          className="absolute -bottom-2 left-6 sm:left-auto sm:-right-2 sm:bottom-4 w-4 h-4 bg-base-100 border-r-2 border-b-2 border-base-300 rotate-45 sm:rotate-[225deg]"
+          className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-base-300 bg-base-100 sm:hidden"
+          aria-hidden
+        />
+        <div
+          className="absolute top-1/2 -right-1.5 hidden h-3 w-3 -translate-y-1/2 rotate-[225deg] border-r-2 border-b-2 border-base-300 bg-base-100 sm:block"
           aria-hidden
         />
       </div>
 
-      <div className="pyto-image order-1 sm:order-2 shrink-0">
+      <div className="pyto-image order-1 shrink-0 sm:order-2">
         <Image
           src={PYTO_IMAGES[variant]}
           alt="Pyto – Python Lerntutor"

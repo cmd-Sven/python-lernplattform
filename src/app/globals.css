@@ -200,3 +200,43 @@ body {
 [data-theme="contrast"] .pyto-bubble-side .bg-base-100 {
   border-width: 2px;
 }
+
+@keyframes lesson-complete-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lesson-complete-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.lesson-complete-backdrop {
+  animation: lesson-complete-backdrop-in 0.35s ease-out both;
+}
+
+.lesson-complete-panel {
+  animation: lesson-complete-panel-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+
+.lesson-complete-video {
+  animation: lesson-complete-panel-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-complete-backdrop,
+  .lesson-complete-panel,
+  .lesson-complete-video {
+    animation: none;
+  }
+}

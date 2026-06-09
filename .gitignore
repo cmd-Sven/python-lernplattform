@@ -50,3 +50,5 @@ scripts/q*.json
 scripts/card-chunk-*.sql
 scripts/seed-parts.json
 scripts/seed-oneline.txt
+
+.vercel
