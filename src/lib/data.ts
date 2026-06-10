@@ -49,6 +49,9 @@ type FlashcardRow = {
   code_example: string | null;
   learn_more_url: string | null;
   learn_more_label: string | null;
+  card_type?: string | null;
+  mc_options?: string[] | null;
+  mc_correct_index?: number | null;
 };
 
 type ExerciseRow = {
@@ -61,6 +64,8 @@ type ExerciseRow = {
   notes: string | null;
   starter_code: string | null;
   solution_code: string | null;
+  exercise_type?: string | null;
+  gap_fill?: import("./types").GapFillData | null;
 };
 
 function mapLesson(row: LessonRow): Lesson {
@@ -75,6 +80,11 @@ function mapLesson(row: LessonRow): Lesson {
 }
 
 function mapFlashcard(row: FlashcardRow): Flashcard {
+  const cardType =
+    row.card_type === "multiple_choice" ? "multiple_choice" : "flip";
+  const mcOptions = row.mc_options ?? undefined;
+  const mcCorrectIndex = row.mc_correct_index ?? undefined;
+
   return {
     id: row.id,
     lessonId: row.lesson_id,
@@ -88,6 +98,11 @@ function mapFlashcard(row: FlashcardRow): Flashcard {
     codeExample: row.code_example ?? undefined,
     learnMoreUrl: row.learn_more_url ?? undefined,
     learnMoreLabel: row.learn_more_label ?? undefined,
+    cardType: mcOptions ? "multiple_choice" : cardType,
+    multipleChoice:
+      mcOptions && mcCorrectIndex !== undefined
+        ? { options: mcOptions, correctIndex: mcCorrectIndex }
+        : undefined,
   };
 }
 
@@ -102,6 +117,11 @@ function mapExercise(row: ExerciseRow): Exercise {
     notes: row.notes ?? undefined,
     starterCode: row.starter_code ?? undefined,
     solutionCode: row.solution_code ?? undefined,
+    exerciseType:
+      row.exercise_type === "gap_fill" || row.gap_fill
+        ? "gap_fill"
+        : "code",
+    gapFill: row.gap_fill ?? undefined,
   };
 }
 
@@ -130,6 +150,9 @@ function flashcardToRow(card: Flashcard): FlashcardRow {
     code_example: card.codeExample ?? null,
     learn_more_url: card.learnMoreUrl ?? null,
     learn_more_label: card.learnMoreLabel ?? null,
+    card_type: card.multipleChoice ? "multiple_choice" : card.cardType ?? "flip",
+    mc_options: card.multipleChoice?.options ?? null,
+    mc_correct_index: card.multipleChoice?.correctIndex ?? null,
   };
 }
 
@@ -144,6 +167,8 @@ function exerciseToRow(exercise: Exercise): ExerciseRow {
     notes: exercise.notes ?? null,
     starter_code: exercise.starterCode ?? null,
     solution_code: exercise.solutionCode ?? null,
+    exercise_type: exercise.gapFill ? "gap_fill" : exercise.exerciseType ?? "code",
+    gap_fill: exercise.gapFill ?? null,
   };
 }
 

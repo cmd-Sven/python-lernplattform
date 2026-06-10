@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AdminPreviewShell from "@/components/AdminPreviewShell";
 import FlashcardDeck from "@/components/FlashcardDeck";
 import VisitorLessonGate from "@/components/VisitorLessonGate";
 import LessonUnlockGate from "@/components/LessonUnlockGate";
+import { isAdminAuthenticated } from "@/lib/auth";
 import {
   getCardsByLesson,
   getExercisesByLesson,
@@ -15,13 +17,21 @@ export const dynamic = "force-dynamic";
 
 export default async function LessonPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { id } = await params;
-  const [lesson, allLessons] = await Promise.all([getLessonById(id), getLessons()]);
+  const { preview } = await searchParams;
+  const adminPreview = preview === "1" && (await isAdminAuthenticated());
 
-  if (!lesson || !lesson.published) {
+  const allLessons = await getLessons();
+  const lesson = adminPreview
+    ? allLessons.find((item) => item.id === id)
+    : await getLessonById(id);
+
+  if (!lesson || (!lesson.published && !adminPreview)) {
     notFound();
   }
 
@@ -33,14 +43,16 @@ export default async function LessonPage({
   const lessonNumber = getLessonNumber(lesson, allLessons);
   const nextLesson = findNextLesson(lesson, allLessons);
 
-  return (
-    <VisitorLessonGate>
-    <LessonUnlockGate lesson={lesson} allLessons={allLessons}>
+  const content = (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <div className="breadcrumbs text-sm mb-4">
         <ul>
           <li>
-            <Link href="/">Start</Link>
+            {adminPreview ? (
+              <Link href="/admin">Admin</Link>
+            ) : (
+              <Link href="/">Start</Link>
+            )}
           </li>
           <li>{lesson.title}</li>
         </ul>
@@ -72,7 +84,17 @@ export default async function LessonPage({
         exercises={exercises}
       />
     </div>
-    </LessonUnlockGate>
+  );
+
+  if (adminPreview) {
+    return <AdminPreviewShell>{content}</AdminPreviewShell>;
+  }
+
+  return (
+    <VisitorLessonGate>
+      <LessonUnlockGate lesson={lesson} allLessons={allLessons}>
+        {content}
+      </LessonUnlockGate>
     </VisitorLessonGate>
   );
 }

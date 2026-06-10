@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Flashcard } from "@/lib/types";
 import { PYTO_IMAGES, type PytoVariant } from "@/lib/pyto";
 import {
   DEFAULT_TIP2_MESSAGES,
   DEFAULT_TIP3_MESSAGES,
+  pickFlipSuccessMessage,
+  pickMcCorrectMessage,
+  pickMcWrongMessage,
   pickRandom,
 } from "@/lib/pytoTips";
 import RichContent from "./RichContent";
@@ -15,12 +18,21 @@ const THINK_MS = 750;
 const SLEEP_AFTER_MS = 5000;
 const MAX_TIPS = 3;
 
+export type PytoAnswerFeedback = "correct" | "wrong" | null;
+
 interface PytoTipBuddyProps {
   card: Flashcard;
   disabled?: boolean;
+  answerFeedback?: PytoAnswerFeedback;
+  solutionViewed?: boolean;
 }
 
-export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyProps) {
+export default function PytoTipBuddy({
+  card,
+  disabled = false,
+  answerFeedback = null,
+  solutionViewed = false,
+}: PytoTipBuddyProps) {
   const [tipCount, setTipCount] = useState(0);
   const [sleeping, setSleeping] = useState(false);
   const [thinking, setThinking] = useState(false);
@@ -28,6 +40,25 @@ export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyPro
   const [showLink, setShowLink] = useState(false);
   const [waving, setWaving] = useState(false);
   const sleepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const feedbackStateKey = `${card.id}:${answerFeedback ?? "none"}:${solutionViewed}`;
+
+  const feedbackMessage = useMemo(() => {
+    if (answerFeedback === "correct") {
+      return pickMcCorrectMessage(card.answer);
+    }
+    if (answerFeedback === "wrong") {
+      return pickMcWrongMessage();
+    }
+    if (solutionViewed) {
+      return pickFlipSuccessMessage();
+    }
+    return null;
+    // Nur bei echtem Feedback-Wechsel neu würfeln, nicht bei jedem Render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedbackStateKey, card.answer]);
+
+  const inFeedbackMode = answerFeedback !== null || solutionViewed;
 
   const clearSleepTimer = useCallback(() => {
     if (sleepTimer.current) {
@@ -47,17 +78,19 @@ export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyPro
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!sleeping && !thinking && !disabled) {
+      if (!sleeping && !thinking && !disabled && !inFeedbackMode) {
         setWaving(true);
         setTimeout(() => setWaving(false), 1200);
       }
     }, 8000);
     return () => clearInterval(interval);
-  }, [sleeping, thinking, disabled]);
+  }, [sleeping, thinking, disabled, inFeedbackMode]);
 
   useEffect(() => clearSleepTimer, [clearSleepTimer]);
 
   function getVariant(): PytoVariant {
+    if (answerFeedback === "correct" || solutionViewed) return "erfolg";
+    if (answerFeedback === "wrong") return "verwirrt";
     if (sleeping) return "schlafend";
     if (thinking) return "nachdenklich";
     if (waving) return "froehlich";
@@ -72,10 +105,19 @@ export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyPro
     return "Noch ein Tipp? Klick mich …";
   }
 
-  const displayMessage = message ?? getIdleMessage();
+  const displayMessage = feedbackMessage ?? message ?? getIdleMessage();
 
   function handleClick() {
-    if (disabled || thinking || sleeping || tipCount >= MAX_TIPS) return;
+    if (
+      disabled ||
+      thinking ||
+      sleeping ||
+      tipCount >= MAX_TIPS ||
+      answerFeedback === "correct" ||
+      solutionViewed
+    ) {
+      return;
+    }
 
     setThinking(true);
     setMessage(null);
@@ -116,23 +158,42 @@ export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyPro
     }, THINK_MS);
   }
 
-  const isClickable = !disabled && !thinking && !sleeping && tipCount < MAX_TIPS;
+  const isClickable =
+    !disabled &&
+    !thinking &&
+    !sleeping &&
+    tipCount < MAX_TIPS &&
+    answerFeedback !== "correct" &&
+    !solutionViewed;
+
+  const bubbleClass =
+    answerFeedback === "correct" || solutionViewed
+      ? "border-success/40 bg-success/5"
+      : answerFeedback === "wrong"
+        ? "border-warning/40 bg-warning/5"
+        : "border-base-300 bg-base-100";
 
   return (
-    <div className="pyto-buddy flex flex-col items-center gap-3 h-full">
+    <div className="pyto-buddy flex flex-col items-center gap-3">
       <button
         type="button"
         className={`pyto-buddy-btn relative transition-transform ${
           isClickable ? "cursor-pointer hover:scale-105" : "cursor-default opacity-90"
-        } ${waving ? "pyto-wave" : ""}`}
+        } ${waving && !inFeedbackMode ? "pyto-wave" : ""} ${
+          answerFeedback === "correct" || solutionViewed ? "pyto-celebrate" : ""
+        }`}
         onClick={handleClick}
         disabled={!isClickable}
         aria-label={
-          sleeping
-            ? "Pyto schläft"
-            : thinking
-              ? "Pyto denkt nach"
-              : "Tipp von Pyto anfordern"
+          answerFeedback === "correct" || solutionViewed
+            ? "Pyto freut sich"
+            : answerFeedback === "wrong"
+              ? "Pyto motiviert"
+              : sleeping
+                ? "Pyto schläft"
+                : thinking
+                  ? "Pyto denkt nach"
+                  : "Tipp von Pyto anfordern"
         }
         title={isClickable ? "Tipp von Pyto" : undefined}
       >
@@ -152,10 +213,16 @@ export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyPro
       </button>
 
       <div className="pyto-bubble-side w-full">
-        <div className="bg-base-100 border-2 border-base-300 rounded-2xl rounded-tl-sm px-4 py-3 shadow-md min-h-[5rem]">
+        <div
+          className={`border-2 rounded-2xl rounded-tl-sm px-4 py-3 shadow-md min-h-[5rem] ${bubbleClass}`}
+        >
           <p className="text-xs font-semibold text-primary mb-1">Pyto</p>
-          <RichContent content={displayMessage} size="sm" />
-          {showLink && card.learnMoreUrl && tipCount >= 2 && (
+          <RichContent
+            key={feedbackMessage ? feedbackStateKey : `idle-${tipCount}-${sleeping}`}
+            content={displayMessage}
+            size="sm"
+          />
+          {showLink && card.learnMoreUrl && tipCount >= 2 && !inFeedbackMode && (
             <a
               href={card.learnMoreUrl}
               target="_blank"
@@ -166,7 +233,7 @@ export default function PytoTipBuddy({ card, disabled = false }: PytoTipBuddyPro
               {card.learnMoreLabel ?? "Schau mal hier"} →
             </a>
           )}
-          {tipCount > 0 && tipCount < MAX_TIPS && !sleeping && (
+          {tipCount > 0 && tipCount < MAX_TIPS && !sleeping && !inFeedbackMode && (
             <p className="text-xs opacity-50 mt-2">
               Tipp {tipCount}/{MAX_TIPS}
             </p>

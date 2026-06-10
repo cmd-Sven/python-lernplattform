@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, type ReactNode } from "react";
+import CodeBlock from "./CodeBlock";
 
 interface RichContentProps {
   content: string;
@@ -11,7 +12,16 @@ interface RichContentProps {
 type Block =
   | { type: "p"; lines: string[] }
   | { type: "ul"; items: string[] }
-  | { type: "ol"; items: string[] };
+  | { type: "ol"; items: string[] }
+  | { type: "code"; language: string; code: string };
+
+function isCodeFence(line: string): boolean {
+  return /^```/.test(line.trim());
+}
+
+function parseCodeFence(line: string): string {
+  return line.trim().replace(/^```/, "").trim();
+}
 
 function parseBlocks(text: string): Block[] {
   const lines = text.split("\n");
@@ -23,6 +33,25 @@ function parseBlocks(text: string): Block[] {
 
     if (line.trim() === "") {
       index += 1;
+      continue;
+    }
+
+    if (isCodeFence(line)) {
+      const language = parseCodeFence(line) || "python";
+      index += 1;
+      const codeLines: string[] = [];
+      while (index < lines.length && !isCodeFence(lines[index])) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) {
+        index += 1;
+      }
+      blocks.push({
+        type: "code",
+        language,
+        code: codeLines.join("\n"),
+      });
       continue;
     }
 
@@ -51,7 +80,8 @@ function parseBlocks(text: string): Block[] {
       index < lines.length &&
       lines[index].trim() !== "" &&
       !/^- /.test(lines[index]) &&
-      !/^\d+\. /.test(lines[index])
+      !/^\d+\. /.test(lines[index]) &&
+      !isCodeFence(lines[index])
     ) {
       paragraph.push(lines[index]);
       index += 1;
@@ -62,9 +92,9 @@ function parseBlocks(text: string): Block[] {
   return blocks;
 }
 
-function parseInline(text: string, keyPrefix: string): React.ReactNode[] {
+function parseInline(text: string, keyPrefix: string): ReactNode[] {
   const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*|==[^=]+==|`[^`]+`)/g;
-  const nodes: React.ReactNode[] = [];
+  const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let partIndex = 0;
@@ -120,6 +150,13 @@ const sizeClasses = {
   lg: "rich-content rich-content-lg",
 };
 
+function codeBlockLabel(language: string): string {
+  const normalized = language.trim().toLowerCase();
+  if (normalized === "python" || normalized === "py") return "Python";
+  if (!normalized) return "Code";
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
 export default function RichContent({
   content,
   className = "",
@@ -130,6 +167,18 @@ export default function RichContent({
   return (
     <div className={`${sizeClasses[size]} ${className}`.trim()}>
       {blocks.map((block, blockIndex) => {
+        if (block.type === "code") {
+          return (
+            <CodeBlock
+              key={blockIndex}
+              code={block.code}
+              language={block.language}
+              label={codeBlockLabel(block.language)}
+              className="mt-3 mb-1"
+            />
+          );
+        }
+
         if (block.type === "ul") {
           return (
             <ul key={blockIndex} className="rich-list rich-list-disc">

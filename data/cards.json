@@ -358,5 +358,104 @@
     "codeExample": "name = \"Sven\"\nscore = 95\nprint(f\"Hallo {name}, Punkte: {score}\")\nprint(f\"2+2={2+2}\")",
     "learnMoreUrl": "https://docs.python.org/3/reference/lexical_analysis.html#f-strings",
     "learnMoreLabel": "Python Docs: f-Strings"
+  },
+  {
+    "id": "c2-01",
+    "lessonId": "lektion-2",
+    "order": 1,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\nx = 7\nif x > 5:\n    print(\"ja\")\nelse:\n    print(\"nein\")\n```",
+    "tip": "*Welche Bedingung ist wahr?*",
+    "answer": "**Kurzantwort:** ==`ja`==",
+    "detail": "**`x > 5` ist `True`**, deshalb wird der `if`-Zweig ausgeführt und `ja` ausgegeben.",
+    "multipleChoice": {
+      "options": ["`nein`", "`ja`", "`True`", "nichts – SyntaxError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c2-02",
+    "lessonId": "lektion-2",
+    "order": 2,
+    "cardType": "multiple_choice",
+    "question": "Welche Ausgabe entsteht?\n\n```python\nfor i in range(3):\n    print(i)\n```",
+    "tip": "*`range(3)` startet bei 0.*",
+    "answer": "**Kurzantwort:** ==0, 1, 2 (jeweils in einer Zeile)==",
+    "detail": "**`range(3)` erzeugt 0, 1, 2** – die 3 ist nicht mehr enthalten.",
+    "multipleChoice": {
+      "options": ["`1, 2, 3`", "`0, 1, 2`", "`3`", "`0, 1, 2, 3`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c2-03",
+    "lessonId": "lektion-2",
+    "order": 3,
+    "cardType": "multiple_choice",
+    "question": "Was macht `break` in einer Schleife?",
+    "tip": "*Die Schleife endet sofort.*",
+    "answer": "**Kurzantwort:** ==Beendet die Schleife sofort==",
+    "detail": "**`break` verlässt die innerste Schleife** – der Code danach in der Schleife wird übersprungen.",
+    "multipleChoice": {
+      "options": [
+        "Überspringt nur die aktuelle Iteration",
+        "Beendet die Schleife sofort",
+        "Startet die Schleife von vorne",
+        "Beendet das ganze Programm"
+      ],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c2-04",
+    "lessonId": "lektion-2",
+    "order": 4,
+    "cardType": "multiple_choice",
+    "question": "Was macht `continue`?",
+    "tip": "*Nicht abbrechen – nur diesen Durchlauf überspringen.*",
+    "answer": "**Kurzantwort:** ==Springt zur nächsten Schleifeniteration==",
+    "detail": "**`continue` beendet nur den aktuellen Durchlauf** und springt zum nächsten Schleifenschritt.",
+    "multipleChoice": {
+      "options": [
+        "Beendet die Schleife",
+        "Springt zur nächsten Schleifeniteration",
+        "Gibt `True` zurück",
+        "Ist dasselbe wie `pass`"
+      ],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c2-05",
+    "lessonId": "lektion-2",
+    "order": 5,
+    "cardType": "multiple_choice",
+    "question": "Welche Bedingung ist in Python **falsy**?",
+    "tip": "*Leere Sammlungen und Null sind falsy.*",
+    "answer": "**Kurzantwort:** ==`[]`==",
+    "detail": "**Eine leere Liste ist falsy.** `1`, `\"0\"` und `[0]` sind truthy.",
+    "multipleChoice": {
+      "options": ["`1`", "`\"0\"`", "`[]`", "`[0]`"],
+      "correctIndex": 2
+    }
+  },
+  {
+    "id": "c2-06",
+    "lessonId": "lektion-2",
+    "order": 6,
+    "cardType": "multiple_choice",
+    "question": "Wann wird der `else`-Block einer `for`-Schleife ausgeführt?",
+    "tip": "*Klassische PCEP-Falle!*",
+    "answer": "**Kurzantwort:** ==Wenn die Schleife **nicht** mit `break` beendet wurde==",
+    "detail": "**Der `else`-Teil einer Schleife läuft nach normalem Ende** – nicht nach `break`.",
+    "multipleChoice": {
+      "options": [
+        "Immer nach jeder Iteration",
+        "Nur wenn `break` ausgeführt wurde",
+        "Wenn die Schleife nicht mit `break` beendet wurde",
+        "Nie – `for` hat kein `else`"
+      ],
+      "correctIndex": 2
+    }
   }
 ]

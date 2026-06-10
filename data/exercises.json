@@ -52,5 +52,37 @@
     "notes": "**Die wichtigsten falsy-Werte:** `0`, `0.0`, `''`, `[]`, `{}`, `None`, `False`. Alles andere ist *truthy*.",
     "starterCode": "werte = [0, \"\", \"hello\", None, False, [1]]\n\nfor wert in werte:\n    # bool() hier nutzen\n    pass",
     "solutionCode": "werte = [0, \"\", \"hello\", None, False, [1]]\n\nfor wert in werte:\n    print(wert, bool(wert))"
+  },
+  {
+    "id": "ex2-01",
+    "lessonId": "lektion-2",
+    "order": 1,
+    "exerciseType": "gap_fill",
+    "title": "if-Zweig ergänzen",
+    "task": "**Lückentext:** Ziehe die **Klötzchen aus dem Pool** in die Lücken im Code. Nicht jedes Klötzchen passt – **Pyto** warnt dich vor falschen Bausteinen.",
+    "solution": "**Lösung:**\n- Bedingung: `x > 5`\n- Ausgabe: `\"groß\"`",
+    "notes": "Ein falsches Klötzchen gehört nicht in die Lücken – Pyto warnt dich!",
+    "gapFill": {
+      "template": "x = 10\nif {{g1}}:\n    print({{g2}})",
+      "canonicalCode": "x = 10\nif x > 5:\n    print(\"groß\")",
+      "gaps": [
+        {
+          "id": "g1",
+          "answers": ["x > 5"],
+          "blockId": "b1"
+        },
+        {
+          "id": "g2",
+          "answers": ["\"groß\""],
+          "blockId": "b2"
+        }
+      ],
+      "blocks": [
+        { "id": "b1", "text": "x > 5" },
+        { "id": "b2", "text": "\"groß\"" },
+        { "id": "d1", "text": "x = 5", "isDecoy": true },
+        { "id": "d2", "text": "\"klein\"", "isDecoy": true }
+      ]
+    }
   }
 ]

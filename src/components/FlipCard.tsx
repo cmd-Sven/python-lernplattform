@@ -29,7 +29,7 @@ export default function FlipCard({ card, flipped, onFlip }: FlipCardProps) {
     <div className="flip-scene w-full">
       <div className={`flip-card-inner ${flipped ? "is-flipped" : ""}`}>
         <div className="flip-card-face flip-card-front card bg-base-100 shadow-xl border border-base-300">
-          <div className="card-body justify-between min-h-[28rem]">
+          <div className="card-body justify-between min-h-0">
             <div>
               <span className="badge badge-outline mb-3">Frage</span>
               <RichContent content={card.question} size="lg" className="font-medium" />
@@ -53,7 +53,7 @@ export default function FlipCard({ card, flipped, onFlip }: FlipCardProps) {
         </div>
 
         <div className="flip-card-face flip-card-back card bg-base-100 shadow-xl border-2 border-primary">
-          <div className="card-body min-h-[28rem] overflow-y-auto">
+          <div className="card-body min-h-0 overflow-y-auto">
             <div className="flex items-start justify-between gap-2 mb-3">
               <span className="badge badge-primary">Lösung</span>
               <button

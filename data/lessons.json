@@ -12,7 +12,7 @@
     "title": "Lektion 2 – Kontrollstrukturen",
     "description": "if/elif/else, while- und for-Schleifen, break und continue.",
     "order": 2,
-    "published": false,
+    "published": true,
     "pcepTopic": "PCEP Modul 2: Control Flow"
   },
   {

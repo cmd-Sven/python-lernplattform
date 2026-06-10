@@ -13,11 +13,14 @@ import {
   markCardComplete,
   toggleExerciseComplete,
 } from "@/lib/visitorProgress";
+import { isMultipleChoiceCard } from "@/lib/cardFormat";
 import ExerciseGate from "./ExerciseGate";
 import FlipCard from "./FlipCard";
+import MultipleChoiceCard from "./MultipleChoiceCard";
 import LessonCompleteModal from "./LessonCompleteModal";
 import LessonPyto from "./LessonPyto";
-import PytoTipBuddy from "./PytoTipBuddy";
+import PytoStickyAside from "./PytoStickyAside";
+import PytoTipBuddy, { type PytoAnswerFeedback } from "./PytoTipBuddy";
 import ProgressBar from "./ProgressBar";
 
 interface FlashcardDeckProps {
@@ -53,6 +56,12 @@ export default function FlashcardDeck({
   const [hasViewedBack, setHasViewedBack] = useState(false);
   const [savingExercise, setSavingExercise] = useState(false);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
+  const [pytoAnswerFeedback, setPytoAnswerFeedback] =
+    useState<PytoAnswerFeedback>(null);
+
+  useEffect(() => {
+    setPytoAnswerFeedback(null);
+  }, [currentIndex, mode, activeExerciseIndex]);
 
   useEffect(() => {
     const lp = getLessonProgress(lessonId);
@@ -75,6 +84,8 @@ export default function FlashcardDeck({
   const currentCard = cards[currentIndex];
   const currentExercise =
     activeExerciseIndex !== null ? exercises[activeExerciseIndex] : null;
+  const isMcCard = currentCard ? isMultipleChoiceCard(currentCard) : false;
+  const canProceed = hasViewedBack;
 
   const saveCardProgress = useCallback(
     (cardId: string) => {
@@ -270,41 +281,54 @@ export default function FlashcardDeck({
 
   if (mode === "exercise" && currentExercise && activeExerciseIndex !== null) {
     const isExerciseDone = completedExerciseIds.includes(currentExercise.id);
+    const isGapFillExercise =
+      currentExercise.exerciseType === "gap_fill" || Boolean(currentExercise.gapFill);
 
     return (
-      <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
-        {pytoSection}
+      <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
         <ProgressBar
           value={completedCount}
           max={cards.length}
           label={`${completedCount} von ${cards.length} Fragen · Übung ${activeExerciseIndex + 1} von ${exercises.length}`}
         />
 
-        <ExerciseGate
-          exercise={currentExercise}
-          index={activeExerciseIndex}
-          isCompleted={isExerciseDone}
-          saving={savingExercise}
-          onToggleComplete={handleToggleExerciseComplete}
-        />
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
+            <ExerciseGate
+              exercise={currentExercise}
+              index={activeExerciseIndex}
+              isCompleted={isExerciseDone}
+              saving={savingExercise}
+              onToggleComplete={handleToggleExerciseComplete}
+            />
 
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={continueFromExercise}
-            disabled={!isExerciseDone}
-            title={
-              isExerciseDone
-                ? undefined
-                : "Hake die Übung ab, um mit den nächsten Fragen fortzufahren"
-            }
-          >
-            {activeExerciseIndex + 1 >= exercises.length &&
-            (activeExerciseIndex + 1) * CARDS_PER_BLOCK >= cards.length
-              ? "Lektion abschließen"
-              : "Weiter zu den nächsten Fragen"}
-          </button>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={continueFromExercise}
+                disabled={!isExerciseDone}
+                title={
+                  isExerciseDone
+                    ? undefined
+                    : isGapFillExercise
+                      ? "Prüfe die Übung erfolgreich, um fortzufahren"
+                      : "Hake die Übung ab, um mit den nächsten Fragen fortzufahren"
+                }
+              >
+                {activeExerciseIndex + 1 >= exercises.length &&
+                (activeExerciseIndex + 1) * CARDS_PER_BLOCK >= cards.length
+                  ? "Lektion abschließen"
+                  : "Weiter zu den nächsten Fragen"}
+              </button>
+            </div>
+          </div>
+
+          {!isGapFillExercise && (
+            <PytoStickyAside>
+              {pytoSection}
+            </PytoStickyAside>
+          )}
         </div>
       </div>
     );
@@ -318,22 +342,33 @@ export default function FlashcardDeck({
         label={`Frage ${currentIndex + 1} von ${cards.length}`}
       />
 
-      <div className="flex flex-col md:flex-row gap-4 items-stretch">
+      <div className="flex flex-col md:flex-row gap-4 items-start">
         <div className="flex-1 min-w-0">
-          <FlipCard
-            key={currentCard.id}
-            card={currentCard}
-            flipped={flipped}
-            onFlip={handleFlip}
-          />
+          {isMcCard ? (
+            <MultipleChoiceCard
+              key={currentCard.id}
+              card={currentCard}
+              onAnsweredCorrectly={() => setHasViewedBack(true)}
+              onAnswerFeedbackChange={setPytoAnswerFeedback}
+            />
+          ) : (
+            <FlipCard
+              key={currentCard.id}
+              card={currentCard}
+              flipped={flipped}
+              onFlip={handleFlip}
+            />
+          )}
         </div>
-        <div className="md:w-52 lg:w-56 shrink-0 flex justify-center md:justify-start">
+        <PytoStickyAside>
           <PytoTipBuddy
             key={currentCard.id}
             card={currentCard}
-            disabled={flipped}
+            disabled={!isMcCard && !hasViewedBack}
+            answerFeedback={isMcCard ? pytoAnswerFeedback : null}
+            solutionViewed={!isMcCard && hasViewedBack}
           />
-        </div>
+        </PytoStickyAside>
       </div>
 
       <div className="flex justify-between gap-3">
@@ -349,11 +384,13 @@ export default function FlashcardDeck({
           type="button"
           className="btn btn-primary"
           onClick={goNextCard}
-          disabled={!hasViewedBack}
+          disabled={!canProceed}
           title={
-            hasViewedBack
+            canProceed
               ? undefined
-              : "Drehe die Karte mit der Glühbirne um, um fortzufahren"
+              : isMcCard
+                ? "Beantworte die Frage richtig, um fortzufahren"
+                : "Drehe die Karte mit der Glühbirne um, um fortzufahren"
           }
         >
           Weiter

@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { Exercise, Flashcard, Lesson } from "@/lib/types";
 import { linesToMessages, messagesToLines } from "@/lib/pytoTips";
+import Link from "next/link";
 import {
   acknowledgeProgressReset,
   clearVisitorProgressOnly,
@@ -309,6 +310,14 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="flex flex-wrap gap-1">
+                        <Link
+                          href={`/lektion/${lesson.id}?preview=1`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-accent btn-xs"
+                        >
+                          Testen
+                        </Link>
                         <button
                           type="button"
                           className="btn btn-ghost btn-xs"

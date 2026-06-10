@@ -1,0 +1,8 @@
+ALTER TABLE pcep_flashcards
+  ADD COLUMN IF NOT EXISTS card_type TEXT NOT NULL DEFAULT 'flip',
+  ADD COLUMN IF NOT EXISTS mc_options JSONB,
+  ADD COLUMN IF NOT EXISTS mc_correct_index INTEGER;
+
+ALTER TABLE pcep_exercises
+  ADD COLUMN IF NOT EXISTS exercise_type TEXT NOT NULL DEFAULT 'code',
+  ADD COLUMN IF NOT EXISTS gap_fill JSONB;

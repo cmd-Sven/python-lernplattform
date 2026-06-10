@@ -1,4 +1,8 @@
 import {
+  ADMIN_PREVIEW_PROGRESS_KEY,
+  isAdminPreviewActive,
+} from "./adminPreview";
+import {
   getCompletionCount,
   hasEverCompletedLesson,
   normalizeCompletionCount,
@@ -16,10 +20,14 @@ import type {
 const PROGRESS_KEY = "pcep-visitor-progress";
 export const PROGRESS_UPDATED_EVENT = "pcep-progress-updated";
 
+function getProgressStorageKey(): string {
+  return isAdminPreviewActive() ? ADMIN_PREVIEW_PROGRESS_KEY : PROGRESS_KEY;
+}
+
 function readList(): LessonProgress[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
+    const raw = localStorage.getItem(getProgressStorageKey());
     if (!raw) return [];
     const data = JSON.parse(raw) as { lessonProgress?: LessonProgress[] };
     const list = data.lessonProgress ?? [];
@@ -34,14 +42,16 @@ function readList(): LessonProgress[] {
 
 function writeList(lessonProgress: LessonProgress[]) {
   localStorage.setItem(
-    PROGRESS_KEY,
+    getProgressStorageKey(),
     JSON.stringify({
       lessonProgress,
       updatedAt: new Date().toISOString(),
     }),
   );
   window.dispatchEvent(new Event(PROGRESS_UPDATED_EVENT));
-  scheduleLearnerBoardSync();
+  if (!isAdminPreviewActive()) {
+    scheduleLearnerBoardSync();
+  }
 }
 
 function getOrCreateLesson(

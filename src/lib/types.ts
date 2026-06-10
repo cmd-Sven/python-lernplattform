@@ -7,6 +7,33 @@ export interface Lesson {
   pcepTopic?: string;
 }
 
+export type CardType = "flip" | "multiple_choice";
+
+export interface MultipleChoiceData {
+  options: string[];
+  correctIndex: number;
+}
+
+export interface GapFillBlock {
+  id: string;
+  text: string;
+  isDecoy?: boolean;
+}
+
+export interface GapFillGap {
+  id: string;
+  answers: string[];
+  blockId: string;
+}
+
+export interface GapFillData {
+  template: string;
+  gaps: GapFillGap[];
+  blocks: GapFillBlock[];
+  /** Vollständiger Referenz-Code – nur diese Lösung ist korrekt. */
+  canonicalCode?: string;
+}
+
 export interface Flashcard {
   id: string;
   lessonId: string;
@@ -20,7 +47,11 @@ export interface Flashcard {
   codeExample?: string;
   learnMoreUrl?: string;
   learnMoreLabel?: string;
+  cardType?: CardType;
+  multipleChoice?: MultipleChoiceData;
 }
+
+export type ExerciseType = "code" | "gap_fill";
 
 export interface Exercise {
   id: string;
@@ -32,6 +63,8 @@ export interface Exercise {
   notes?: string;
   starterCode?: string;
   solutionCode?: string;
+  exerciseType?: ExerciseType;
+  gapFill?: GapFillData;
 }
 
 export interface LessonProgress {

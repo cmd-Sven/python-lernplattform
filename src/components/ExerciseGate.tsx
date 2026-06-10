@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Exercise } from "@/lib/types";
 import dynamic from "next/dynamic";
 import CodeBlock from "./CodeBlock";
+import GapFillExercise from "./GapFillExercise";
 import RichContent from "./RichContent";
 
 const PythonPlayground = dynamic(() => import("./PythonPlayground"), {
@@ -24,6 +25,10 @@ interface ExerciseGateProps {
   onToggleComplete: () => void;
 }
 
+function isGapFillExercise(exercise: Exercise): boolean {
+  return exercise.exerciseType === "gap_fill" || Boolean(exercise.gapFill);
+}
+
 export default function ExerciseGate({
   exercise,
   index,
@@ -32,6 +37,7 @@ export default function ExerciseGate({
   onToggleComplete,
 }: ExerciseGateProps) {
   const [solutionVisible, setSolutionVisible] = useState(false);
+  const gapFill = isGapFillExercise(exercise);
 
   return (
     <div className="card bg-base-100 shadow-xl border-2 border-secondary">
@@ -39,34 +45,47 @@ export default function ExerciseGate({
         <div className="flex flex-wrap items-center gap-2">
           <span className="badge badge-secondary">Übung {index + 1}</span>
           <span className="badge badge-outline">Pause nach 6 Fragen</span>
+          {gapFill && <span className="badge badge-accent">Lückentext</span>}
           {isCompleted && <span className="badge badge-success">Erledigt</span>}
         </div>
 
         <h2 className="card-title text-xl">{exercise.title}</h2>
-        <RichContent content={exercise.task} size="sm" />
 
-        <PythonPlayground
-          exerciseId={exercise.id}
-          initialCode={
-            exercise.starterCode ??
-            "# Schreibe deinen Code hier\nprint('Hallo Python!')"
-          }
-        />
+        {gapFill && exercise.gapFill ? (
+          <GapFillExercise
+            exercise={exercise}
+            isCompleted={isCompleted}
+            saving={saving}
+            onToggleComplete={onToggleComplete}
+          />
+        ) : (
+          <>
+            <RichContent content={exercise.task} size="sm" />
 
-        <div className="flex flex-wrap items-center gap-4 border-t border-base-300 pt-4">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              className="checkbox checkbox-success checkbox-lg"
-              checked={isCompleted}
-              disabled={saving}
-              onChange={onToggleComplete}
+            <PythonPlayground
+              exerciseId={exercise.id}
+              initialCode={
+                exercise.starterCode ??
+                "# Schreibe deinen Code hier\nprint('Hallo Python!')"
+              }
             />
-            <span className="font-medium">
-              Übung erledigt – zum Weiterlernen abhaken
-            </span>
-          </label>
-        </div>
+
+            <div className="flex flex-wrap items-center gap-4 border-t border-base-300 pt-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-success checkbox-lg"
+                  checked={isCompleted}
+                  disabled={saving}
+                  onChange={onToggleComplete}
+                />
+                <span className="font-medium">
+                  Übung erledigt – zum Weiterlernen abhaken
+                </span>
+              </label>
+            </div>
+          </>
+        )}
 
         <button
           type="button"

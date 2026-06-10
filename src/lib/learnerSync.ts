@@ -1,3 +1,4 @@
+import { isAdminPreviewActive } from "./adminPreview";
 import { normalizeCompletionCount } from "./lessonCompletion";
 import { getOrCreateVisitorId, getVisitorState } from "./visitor";
 
@@ -5,6 +6,7 @@ let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function scheduleLearnerBoardSync(): void {
   if (typeof window === "undefined") return;
+  if (isAdminPreviewActive()) return;
 
   const { onboarded, name } = getVisitorState();
   if (!onboarded || !name.trim()) return;
@@ -18,6 +20,7 @@ export function scheduleLearnerBoardSync(): void {
 
 export async function syncLearnerBoard(): Promise<void> {
   if (typeof window === "undefined") return;
+  if (isAdminPreviewActive()) return;
 
   const { onboarded, name } = getVisitorState();
   if (!onboarded || !name.trim()) return;
