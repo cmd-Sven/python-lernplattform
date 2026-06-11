@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatPythonError } from "@/lib/pythonErrors";
-import { loadPyodideRuntime, runPythonCode } from "@/lib/pyodide";
+import { loadPyodideRuntime } from "@/lib/pyodide";
 import {
   validateMazeExitChallenge,
   type MazeExitChallenge,
 } from "@/lib/maze/mazeExitChallenges";
+import { runMazeExitPython } from "@/lib/maze/mazeExitPython";
 import RichContent from "../RichContent";
 import MazeExitPytoBuddy, { type ExitChallengeFeedback } from "./MazeExitPytoBuddy";
 
@@ -59,15 +60,27 @@ export default function MazeExitChallengeModal({
         setRuntimeReady(true);
       }
 
-      const result = await runPythonCode(code);
+      const result = await runMazeExitPython(code);
       const lines: string[] = [];
       if (result.stdout) lines.push(result.stdout);
       if (result.stderr) lines.push(result.stderr);
+      if (result.sideEffects.holdCount > 0) {
+        lines.push(`Hebel: ${result.sideEffects.holdCount}× halten()`);
+      }
+      if (result.sideEffects.laserCount > 0) {
+        lines.push(`Laser: ${result.sideEffects.laserCount}× laser()`);
+      }
       if (result.error) lines.push(`Fehler: ${result.error}`);
       const text = lines.join("\n") || "(Keine Ausgabe)";
       setOutput(text);
 
-      const ok = validateMazeExitChallenge(challenge, result.stdout, result.error);
+      const ok = validateMazeExitChallenge(
+        challenge,
+        code,
+        result.stdout,
+        result.error,
+        result.sideEffects,
+      );
       if (ok) {
         setFeedback("success");
         setTimeout(() => onSolved(), 1200);
