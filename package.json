@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "eslint",
-    "seed:supabase": "node --env-file=.env.local scripts/seed-supabase.mjs"
+    "seed:supabase": "node --env-file=.env.local scripts/seed-supabase.mjs",
+    "seed:content": "node --env-file=.env.local scripts/seed-content-supabase.mjs",
+    "seed:lesson": "node --env-file=.env.local scripts/seed-content-supabase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.0",

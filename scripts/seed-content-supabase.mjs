@@ -1,10 +1,9 @@
 /**
- * Lädt data/*.json in Supabase (pcep_* Tabellen) inkl. Fortschritt aus progress.json.
- * Für Produktion nur Inhalte syncen: npm run seed:content
+ * Lädt nur Lektionen, Karten und Übungen aus data/*.json nach Supabase.
+ * Überschreibt KEINEN Nutzer-Fortschritt (pcep_site_progress / pcep_lesson_progress).
  *
- * Voraussetzung: .env.local mit NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY
- *
- * Ausführen: node --env-file=.env.local scripts/seed-supabase.mjs
+ * Ausführen: node --env-file=.env.local scripts/seed-content-supabase.mjs
+ * Optional nur eine Lektion: node --env-file=.env.local scripts/seed-content-supabase.mjs lektion-3
  */
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
@@ -13,6 +12,7 @@ import { fileURLToPath } from "url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = join(root, "data");
+const lessonFilter = process.argv[2] ?? null;
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -33,9 +33,14 @@ function readJson(name) {
 }
 
 const lessons = readJson("lessons.json");
-const cards = readJson("cards.json");
-const exercises = readJson("exercises.json");
-const progress = readJson("progress.json");
+let cards = readJson("cards.json");
+let exercises = readJson("exercises.json");
+
+if (lessonFilter) {
+  cards = cards.filter((c) => c.lessonId === lessonFilter);
+  exercises = exercises.filter((e) => e.lessonId === lessonFilter);
+  console.log(`Filter: nur ${lessonFilter}`);
+}
 
 const lessonRows = lessons.map((l) => ({
   id: l.id,
@@ -79,43 +84,26 @@ const exerciseRows = exercises.map((e) => ({
 }));
 
 async function upsert(table, rows, onConflict = "id") {
+  if (rows.length === 0) {
+    console.log(`○ ${table}: nichts zu synchronisieren`);
+    return;
+  }
   const { error } = await supabase.from(table).upsert(rows, { onConflict });
   if (error) throw new Error(`${table}: ${error.message}`);
   console.log(`✓ ${table}: ${rows.length} Zeilen`);
 }
 
 async function main() {
-  await upsert("pcep_lessons", lessonRows);
-  await upsert("pcep_flashcards", cardRows);
-  await upsert("pcep_exercises", exerciseRows);
-
-  const { error: siteErr } = await supabase.from("pcep_site_progress").upsert(
-    {
-      id: "default",
-      learner_name: progress.learnerName ?? "",
-      onboarded: progress.onboarded ?? false,
-      updated_at: progress.updatedAt ?? new Date().toISOString(),
-    },
-    { onConflict: "id" },
-  );
-  if (siteErr) throw new Error(`pcep_site_progress: ${siteErr.message}`);
-  console.log("✓ pcep_site_progress: 1 Zeile");
-
-  const lessonProgress = progress.lessonProgress ?? [];
-  if (lessonProgress.length > 0) {
-    const lpRows = lessonProgress.map((lp) => ({
-      lesson_id: lp.lessonId,
-      completed_card_ids: lp.completedCardIds ?? [],
-      completed_exercise_ids: lp.completedExerciseIds ?? [],
-      lesson_completed: lp.lessonCompleted ?? false,
-      completed_at: lp.completedAt ?? null,
-    }));
-    await upsert("pcep_lesson_progress", lpRows, "lesson_id");
+  if (lessonFilter) {
+    await upsert("pcep_flashcards", cardRows);
+    await upsert("pcep_exercises", exerciseRows);
   } else {
-    console.log("✓ pcep_lesson_progress: keine Einträge in progress.json");
+    await upsert("pcep_lessons", lessonRows);
+    await upsert("pcep_flashcards", cardRows);
+    await upsert("pcep_exercises", exerciseRows);
   }
 
-  console.log("\nSeed abgeschlossen.");
+  console.log("\nContent-Sync abgeschlossen (ohne Fortschrittsdaten).");
 }
 
 main().catch((err) => {
