@@ -96,9 +96,9 @@ export default function MazeGrid({
             let cellStyle: CSSProperties | undefined;
             if (showContent && !isExploding) {
               if (symbol === "#") {
-                cellStyle = getWallBackgroundStyle(x, y, width, height);
+                cellStyle = getWallBackgroundStyle();
               } else {
-                cellStyle = getFloorBackgroundStyle(level.id, x, y, width, height);
+                cellStyle = getFloorBackgroundStyle(level.id);
               }
             }
 
