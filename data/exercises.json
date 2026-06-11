@@ -127,5 +127,75 @@
         { "id": "d2", "text": "\"nicht bestanden\"", "isDecoy": true }
       ]
     }
+  },
+  {
+    "id": "ex3-01",
+    "lessonId": "lektion-3",
+    "order": 1,
+    "exerciseType": "gap_fill",
+    "title": "Liste aufbauen",
+    "task": "**Lückentext:** Ziehe die **Klötzchen aus dem Pool** in die Lücken. Baue eine Liste mit den Zahlen 1, 2 und 3 – und hänge die 4 ans Ende.",
+    "solution": "**Lösung:**\n- Liste: `[1, 2, 3]`\n- Methode: `.append(4)`",
+    "notes": "**Merke:** `append` hängt ein Element an – `extend` würde die Ziffern einer anderen Sequenz einzeln anfügen.",
+    "gapFill": {
+      "template": "zahlen = {{g1}}\nzahlen.{{g2}}(4)\nprint(zahlen)",
+      "canonicalCode": "zahlen = [1, 2, 3]\nzahlen.append(4)\nprint(zahlen)",
+      "gaps": [
+        {
+          "id": "g1",
+          "answers": ["[1, 2, 3]"],
+          "blockId": "b1"
+        },
+        {
+          "id": "g2",
+          "answers": ["append"],
+          "blockId": "b2"
+        }
+      ],
+      "blocks": [
+        { "id": "b1", "text": "[1, 2, 3]" },
+        { "id": "b2", "text": "append" },
+        { "id": "d1", "text": "(1, 2, 3)", "isDecoy": true },
+        { "id": "d2", "text": "extend", "isDecoy": true }
+      ]
+    }
+  },
+  {
+    "id": "ex3-02",
+    "lessonId": "lektion-3",
+    "order": 2,
+    "title": "Liste durchlaufen und summieren",
+    "task": "**Aufgabe:** Gegeben ist `zahlen = [4, 7, 2, 9]`.\n\n**Schreibe eine `for`-Schleife**, die alle Werte addiert und am Ende die **Summe** ausgibt.\n\n*Erwartete Ausgabe:* `22`",
+    "solution": "**So geht's:**\n1. Starte mit `summe = 0`\n2. Iteriere mit `for zahl in zahlen:`\n3. Addiere jeden Wert: `summe += zahl` (oder `summe = summe + zahl`)\n4. Gib `summe` mit `print()` aus\n\n**Alternativ:** `print(sum(zahlen))` – in der Übung sollst du die Schleife selbst schreiben.",
+    "notes": "**Typischer Fehler:** `summe` vor der Schleife nicht auf `0` setzen – dann fehlt der Startwert.",
+    "starterCode": "zahlen = [4, 7, 2, 9]\n\n# Summe mit for-Schleife berechnen:\n",
+    "solutionCode": "zahlen = [4, 7, 2, 9]\n\nsumme = 0\nfor zahl in zahlen:\n    summe += zahl\n\nprint(summe)"
+  },
+  {
+    "id": "ex3-03",
+    "lessonId": "lektion-3",
+    "order": 3,
+    "exerciseType": "gap_fill",
+    "title": "Slicing ergänzen",
+    "task": "**Lückentext:** Ziehe die **Klötzchen aus dem Pool** in die Lücke. Der Code soll die **ersten drei Zeichen** von `\"Python\"` ausgeben.",
+    "solution": "**Lösung:**\n- Slicing: `[:3]` – von Anfang bis (exklusiv) Index 3",
+    "notes": "**Slicing-Regel:** Start inklusive, Ende exklusiv. `[:3]` liefert Index 0, 1 und 2 → `Pyt`.",
+    "gapFill": {
+      "template": "wort = \"Python\"\nprint(wort{{g1}})",
+      "canonicalCode": "wort = \"Python\"\nprint(wort[:3])",
+      "gaps": [
+        {
+          "id": "g1",
+          "answers": ["[:3]"],
+          "blockId": "b1"
+        }
+      ],
+      "blocks": [
+        { "id": "b1", "text": "[:3]" },
+        { "id": "d1", "text": "[1:4]", "isDecoy": true },
+        { "id": "d2", "text": "[0:2]", "isDecoy": true },
+        { "id": "d3", "text": "[::2]", "isDecoy": true }
+      ]
+    }
   }
 ]

@@ -76,14 +76,14 @@ export const MAZE_EXIT_CHALLENGES: MazeExitChallenge[] = [
     title: "Debug-Passwort",
     kind: "print_lines",
     task:
-      "Der **echte** Ausgang verlangt zwei Zeilen Output: Zuerst `404`, dann `Bug gefangen`. Schreibe **zwei separate** `print()`-Aufrufe – einen pro Zeile.",
+      "Der **echte** Ausgang verlangt zwei Zeilen Output: Zuerst `404`, dann `gefangen`. Schreibe **zwei separate** `print()`-Aufrufe – einen pro Zeile.",
     starterCode: "# Zwei print()-Zeilen:\n",
     tips: [
       "Jede Ausgabezeile braucht einen **eigenen** `print()`-Aufruf.",
       "Die **erste** Zeile soll genau `404` sein – ohne Extra-Text.",
-      "Die **zweite** Zeile: `Bug gefangen` – in einem **zweiten** print(), nicht alles in einem!",
+      "Die **zweite** Zeile: `gefangen` – in einem **zweiten** print(), nicht alles in einem!",
     ],
-    expectedLines: ["404", "Bug gefangen"],
+    expectedLines: ["404", "gefangen"],
   },
 ];
 
@@ -150,8 +150,8 @@ function validateLevel3Code(code: string): boolean {
 function validateLevel4Code(code: string): boolean {
   const printCalls = countRegexMatches(code, /\bprint\s*\(/g);
   if (printCalls < 2) return false;
-  if (/\bprint\s*\([^)]*404[^)]*Bug/i.test(code)) return false;
-  if (/\bprint\s*\([^)]*\\n/i.test(code) && /404/.test(code) && /Bug/.test(code)) {
+  if (/\bprint\s*\([^)]*404[^)]*gefangen/i.test(code)) return false;
+  if (/\bprint\s*\([^)]*\\n/i.test(code) && /404/.test(code) && /gefangen/.test(code)) {
     return false;
   }
   return true;

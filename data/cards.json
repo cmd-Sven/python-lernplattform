@@ -682,5 +682,300 @@
       ],
       "correctIndex": 1
     }
+  },
+  {
+    "id": "c3-01",
+    "lessonId": "lektion-3",
+    "order": 1,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\nzahlen = [10, 20, 30]\nprint(zahlen[1])\n```",
+    "tip": "*Listen-Indizes starten bei 0.*",
+    "answer": "**Kurzantwort:** ==`20`==",
+    "detail": "**Index 1 ist das zweite Element** – `[10, 20, 30]` hat an Position 1 den Wert `20`.",
+    "multipleChoice": {
+      "options": ["`10`", "`20`", "`30`", "`1`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-02",
+    "lessonId": "lektion-3",
+    "order": 2,
+    "cardType": "multiple_choice",
+    "question": "Was ist das Ergebnis?\n\n```python\nfarben = [\"rot\", \"grün\", \"blau\"]\nprint(farben[-1])\n```",
+    "tip": "*Negative Indizes zählen vom Ende.*",
+    "answer": "**Kurzantwort:** ==`blau`==",
+    "detail": "**`-1` ist das letzte Element** – `blau` steht an der letzten Position.",
+    "multipleChoice": {
+      "options": ["`rot`", "`grün`", "`blau`", "IndexError"],
+      "correctIndex": 2
+    }
+  },
+  {
+    "id": "c3-03",
+    "lessonId": "lektion-3",
+    "order": 3,
+    "cardType": "multiple_choice",
+    "question": "Welche Ausgabe entsteht?\n\n```python\nwort = \"Python\"\nprint(wort[1:4])\n```",
+    "tip": "*Slicing: Start inklusive, Ende exklusiv.*",
+    "answer": "**Kurzantwort:** ==`yth`==",
+    "detail": "**Indizes 1, 2 und 3** – das sind die Zeichen `y`, `t` und `h`. Index 4 (`n`) gehört nicht dazu.",
+    "multipleChoice": {
+      "options": ["`Pyt`", "`yth`", "`ytho`", "`Python`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-04",
+    "lessonId": "lektion-3",
+    "order": 4,
+    "cardType": "multiple_choice",
+    "question": "Was passiert nach diesem Code?\n\n```python\nliste = [1, 2, 3]\nliste[0] = 99\nprint(liste)\n```",
+    "tip": "*Listen sind **veränderbar** (mutable).*",
+    "answer": "**Kurzantwort:** ==`[99, 2, 3]`==",
+    "detail": "**Elemente einer Liste können per Index überschrieben werden** – das erste Element wird von `1` auf `99` geändert.",
+    "multipleChoice": {
+      "options": ["`[1, 2, 3]`", "`[99, 2, 3]`", "TypeError", "SyntaxError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-05",
+    "lessonId": "lektion-3",
+    "order": 5,
+    "cardType": "multiple_choice",
+    "question": "Was enthält `liste` nach diesem Code?\n\n```python\nliste = [1, 2]\nliste.append(3)\nprint(liste)\n```",
+    "tip": "*`append` hängt **ein** Element ans Ende.*",
+    "answer": "**Kurzantwort:** ==`[1, 2, 3]`==",
+    "detail": "**`append(3)` fügt die Zahl 3 als neues letztes Element hinzu** – die Liste wird länger, nicht verschachtelt.",
+    "multipleChoice": {
+      "options": ["`[1, 2]`", "`[1, 2, 3]`", "`[3, 1, 2]`", "`[1, 2, [3]]`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-06",
+    "lessonId": "lektion-3",
+    "order": 6,
+    "cardType": "multiple_choice",
+    "question": "Was ist der Unterschied zwischen `append` und `extend`?",
+    "tip": "*Eines fügt ein Element hinzu, das andere Elemente aus einer anderen Sequenz.*",
+    "answer": "**Kurzantwort:** ==`append` fügt ein Element hinzu, `extend` hängt alle Elemente einer Sequenz an==",
+    "detail": "**`liste.append([4, 5])` ergibt eine verschachtelte Liste**, `liste.extend([4, 5])` hängt `4` und `5` einzeln an.",
+    "multipleChoice": {
+      "options": [
+        "`append` und `extend` sind identisch",
+        "`append` fügt ein Element hinzu, `extend` hängt alle Elemente einer Sequenz an",
+        "`extend` kann nur Strings verarbeiten",
+        "`append` löscht das letzte Element"
+      ],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-07",
+    "lessonId": "lektion-3",
+    "order": 7,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\nt = (1, 2, 3)\nprint(t[0])\n```",
+    "tip": "*Tupel verhalten sich beim Indexieren wie Listen.*",
+    "answer": "**Kurzantwort:** ==`1`==",
+    "detail": "**Tupel sind Sequenzen** – Index `0` liefert das erste Element `1`.",
+    "multipleChoice": {
+      "options": ["`1`", "`(1,)`", "`(1, 2, 3)`", "TypeError"],
+      "correctIndex": 0
+    }
+  },
+  {
+    "id": "c3-08",
+    "lessonId": "lektion-3",
+    "order": 8,
+    "cardType": "multiple_choice",
+    "question": "Was passiert hier?\n\n```python\nt = (10, 20)\nt[0] = 5\n```",
+    "tip": "*Tupel sind **unveränderlich** (immutable).*",
+    "answer": "**Kurzantwort:** ==`TypeError` – Tupel-Elemente können nicht geändert werden==",
+    "detail": "**Nach der Erstellung sind Tupel-Inhalte fest** – ein Zuweisen per Index ist nicht erlaubt.",
+    "multipleChoice": {
+      "options": [
+        "`t` wird `(5, 20)`",
+        "`TypeError` – Tupel-Elemente können nicht geändert werden",
+        "`SyntaxError`",
+        "Nichts – der Code wird ignoriert"
+      ],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-09",
+    "lessonId": "lektion-3",
+    "order": 9,
+    "cardType": "multiple_choice",
+    "question": "Welcher Ausdruck ist **wahr**?\n\n```python\nnamen = [\"Anna\", \"Ben\", \"Clara\"]\n```",
+    "tip": "*`in` prüft Mitgliedschaft in einer Sequenz.*",
+    "answer": "**Kurzantwort:** ==`\"Ben\" in namen`==",
+    "detail": "**`\"Ben\"` ist ein Element der Liste** – `in` liefert `True`. `\"ben\"` wäre wegen Groß-/Kleinschreibung falsch.",
+    "multipleChoice": {
+      "options": ["`\"ben\" in namen`", "`\"Ben\" in namen`", "`2 in namen`", "`\"Anna\" not in namen`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-10",
+    "lessonId": "lektion-3",
+    "order": 10,
+    "cardType": "multiple_choice",
+    "question": "Was ist das Ergebnis?\n\n```python\nprint(len(\"Python\"))\n```",
+    "tip": "*`len` zählt Zeichen in einem String.*",
+    "answer": "**Kurzantwort:** ==`6`==",
+    "detail": "**Der String `\"Python\"` hat 6 Zeichen** – Leerzeichen würden mitgezählt werden.",
+    "multipleChoice": {
+      "options": ["`5`", "`6`", "`7`", "`\"6\"`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-11",
+    "lessonId": "lektion-3",
+    "order": 11,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\na = [1, 2]\nb = [3, 4]\nprint(a + b)\n```",
+    "tip": "*`+` verkettet zwei Listen zu einer neuen Liste.*",
+    "answer": "**Kurzantwort:** ==`[1, 2, 3, 4]`==",
+    "detail": "**Listen-Konkatenation erzeugt eine neue Liste** – `a` und `b` selbst bleiben unverändert.",
+    "multipleChoice": {
+      "options": ["`[4, 6]`", "`[1, 2, 3, 4]`", "`[1, 2]`", "TypeError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-12",
+    "lessonId": "lektion-3",
+    "order": 12,
+    "cardType": "multiple_choice",
+    "question": "Was ist das Ergebnis?\n\n```python\nprint([0] * 4)\n```",
+    "tip": "*`*` wiederholt eine Sequenz.*",
+    "answer": "**Kurzantwort:** ==`[0, 0, 0, 0]`==",
+    "detail": "**`[0] * 4` erzeugt eine Liste mit vier Nullen** – nicht `0` mal `4` gerechnet.",
+    "multipleChoice": {
+      "options": ["`[0, 4]`", "`[0, 0, 0, 0]`", "`0`", "`[4]`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-13",
+    "lessonId": "lektion-3",
+    "order": 13,
+    "cardType": "multiple_choice",
+    "question": "Was enthält `liste` nach diesem Code?\n\n```python\nliste = [1, 2, 3, 2]\nliste.remove(2)\nprint(liste)\n```",
+    "tip": "*`remove` löscht das **erste** passende Element – nicht nach Index.*",
+    "answer": "**Kurzantwort:** ==`[1, 3, 2]`==",
+    "detail": "**Nur die erste `2` wird entfernt** – die `2` am Ende bleibt erhalten.",
+    "multipleChoice": {
+      "options": ["`[1, 3]`", "`[1, 3, 2]`", "`[1, 2, 3]`", "ValueError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-14",
+    "lessonId": "lektion-3",
+    "order": 14,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\nmatrix = [[1, 2], [3, 4]]\nprint(matrix[1][0])\n```",
+    "tip": "*Zuerst die Zeile, dann die Spalte.*",
+    "answer": "**Kurzantwort:** ==`3`==",
+    "detail": "**`matrix[1]` ist `[3, 4]`** – Index `0` darin liefert `3`.",
+    "multipleChoice": {
+      "options": ["`1`", "`2`", "`3`", "`4`"],
+      "correctIndex": 2
+    }
+  },
+  {
+    "id": "c3-15",
+    "lessonId": "lektion-3",
+    "order": 15,
+    "cardType": "multiple_choice",
+    "question": "Was ist das Ergebnis?\n\n```python\ntext = \"Hallo\"\nprint(text.upper())\n```",
+    "tip": "*String-Methoden verändern den Original-String nicht.*",
+    "answer": "**Kurzantwort:** ==`HALLO`==",
+    "detail": "**`.upper()` gibt einen neuen String in Großbuchstaben zurück** – `text` bleibt `\"Hallo\"`.",
+    "multipleChoice": {
+      "options": ["`Hallo`", "`HALLO`", "`hallo`", "TypeError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-16",
+    "lessonId": "lektion-3",
+    "order": 16,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\nsatz = \"a,b,c\"\nprint(satz.split(\",\"))\n```",
+    "tip": "*`split` teilt an einem Trennzeichen.*",
+    "answer": "**Kurzantwort:** ==`['a', 'b', 'c']`==",
+    "detail": "**`split(\",\")` zerlegt den String an jedem Komma** in eine Liste von Teilstrings.",
+    "multipleChoice": {
+      "options": ["`'a,b,c'`", "`['a', 'b', 'c']`", "`('a', 'b', 'c')`", "`['a,b,c']`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-17",
+    "lessonId": "lektion-3",
+    "order": 17,
+    "cardType": "multiple_choice",
+    "question": "Was enthält `liste` nach diesem Code?\n\n```python\nliste = [1, 2, 3, 4]\ndel liste[1]\nprint(liste)\n```",
+    "tip": "*`del` entfernt ein Element an einem Index.*",
+    "answer": "**Kurzantwort:** ==`[1, 3, 4]`==",
+    "detail": "**Index 1 (die `2`) wird gelöscht** – die übrigen Elemente rutschen nicht „leer“, die Liste wird kürzer.",
+    "multipleChoice": {
+      "options": ["`[1, 2, 4]`", "`[1, 3, 4]`", "`[2, 3, 4]`", "`[1, None, 3, 4]`"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-18",
+    "lessonId": "lektion-3",
+    "order": 18,
+    "cardType": "multiple_choice",
+    "question": "Was gibt dieser Code aus?\n\n```python\nx, y = (10, 20)\nprint(x, y)\n```",
+    "tip": "*Mehrere Variablen links – gleich viele Werte rechts.*",
+    "answer": "**Kurzantwort:** ==`10 20`==",
+    "detail": "**Tuple Unpacking weist `10` an `x` und `20` an `y` zu** – `print` trennt mit Leerzeichen.",
+    "multipleChoice": {
+      "options": ["`(10, 20)`", "`10 20`", "`20 10`", "ValueError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-19",
+    "lessonId": "lektion-3",
+    "order": 19,
+    "cardType": "multiple_choice",
+    "question": "Was ist das Ergebnis?\n\n```python\nprint(\"Python\"[::-1])\n```",
+    "tip": "*Schrittweite `-1` kehrt die Sequenz um.*",
+    "answer": "**Kurzantwort:** ==`nohtyP`==",
+    "detail": "**`[::-1]` liefert den String rückwärts** – von hinten nach vorne mit Schritt `-1`.",
+    "multipleChoice": {
+      "options": ["`Python`", "`nohtyP`", "`Pyt`", "SyntaxError"],
+      "correctIndex": 1
+    }
+  },
+  {
+    "id": "c3-20",
+    "lessonId": "lektion-3",
+    "order": 20,
+    "cardType": "multiple_choice",
+    "question": "Welche Aussage über **Listen** und **Tupel** ist korrekt?",
+    "tip": "*Beide sind Sequenzen – aber nicht gleich veränderbar.*",
+    "answer": "**Kurzantwort:** ==Listen sind veränderbar, Tupel sind unveränderbar==",
+    "detail": "**Das ist der zentrale Unterschied in PCEP Modul 3** – beide speichern geordnete Elemente, nur Listen erlauben nachträgliche Änderungen.",
+    "multipleChoice": {
+      "options": [
+        "Listen und Tupel sind immer identisch",
+        "Listen sind veränderbar, Tupel sind unveränderbar",
+        "Tupel können mit `append` erweitert werden",
+        "Listen sind unveränderbar, Tupel sind veränderbar"
+      ],
+      "correctIndex": 1
+    }
   }
 ]
