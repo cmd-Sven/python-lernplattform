@@ -884,27 +884,28 @@ body {
   white-space: pre-wrap;
 }
 
-.maze-play-area {
-  --maze-size: min(42rem, 96vw);
-  --maze-cell: calc(var(--maze-size) / 12);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.85rem;
-}
-
 .maze-board-wrap {
   display: flex;
   justify-content: center;
   overflow: visible;
+  width: 100%;
+}
+
+.maze-board-core {
+  --maze-size: min(42rem, 96vw);
+  --maze-cell: calc(var(--maze-size) / 12);
+  position: relative;
+  width: var(--maze-size);
+  max-width: 100%;
   padding-top: 4.5rem;
 }
 
 .maze-inventory {
+  position: absolute;
+  top: 4.5rem;
+  left: calc(100% + 0.75rem);
   width: calc(var(--maze-cell) * 2);
   min-width: 5.5rem;
-  margin-top: 4.5rem;
   padding: 0.45rem;
   border: 2px solid var(--color-base-300);
   border-radius: 0.75rem;
@@ -1006,15 +1007,14 @@ body {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .maze-inventory {
-    margin-top: 0;
-    width: min(calc(var(--maze-cell) * 2), 40vw);
+    position: static;
+    left: auto;
+    top: auto;
+    margin: 0.75rem auto 0;
+    width: min(calc(var(--maze-cell) * 2), 42vw);
   }
-}
-
-.maze-board-wrap--relative {
-  position: relative;
 }
 
 .maze-exit-modal {

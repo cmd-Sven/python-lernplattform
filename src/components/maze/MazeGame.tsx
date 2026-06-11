@@ -679,8 +679,9 @@ export default function MazeGame({ adminPreview = false }: MazeGameProps) {
           )}
 
           <div className="maze-shake-stage">
-            <div className="maze-play-area mt-4">
-              <div className="maze-board-wrap maze-board-wrap--relative">
+            <div className="mt-4 maze-board-wrap">
+              <div className="maze-board-core">
+                {state && (
                 <MazeGrid
                   level={level}
                   state={state}
@@ -696,6 +697,10 @@ export default function MazeGame({ adminPreview = false }: MazeGameProps) {
                   shaking={storyShaking}
                   wallBumping={wallBumping}
                 />
+                )}
+                <MazeBugInventory
+                  visible={level.id === 4 && Boolean(state?.bugCaught)}
+                />
                 {celebrationActive && (
                   <MazeCelebration
                     onContinue={handleCelebrationContinue}
@@ -705,9 +710,6 @@ export default function MazeGame({ adminPreview = false }: MazeGameProps) {
                   />
                 )}
               </div>
-              <MazeBugInventory
-                visible={level.id === 4 && Boolean(state?.bugCaught)}
-              />
             </div>
           </div>
 
