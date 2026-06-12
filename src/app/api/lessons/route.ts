@@ -32,6 +32,7 @@ export async function GET(request: Request) {
       completedCards,
       lessonCompleted: hasEverCompletedLesson(lp),
       completionCount: getCompletionCount(lp),
+      savedCardCount: lp?.savedCardIds?.length ?? 0,
     };
   });
 
