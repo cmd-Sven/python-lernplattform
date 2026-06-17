@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type { Exercise, Flashcard, Lesson } from "@/lib/types";
 import { linesToMessages, messagesToLines } from "@/lib/pytoTips";
 import Link from "next/link";
@@ -28,11 +28,12 @@ type AdminLearner = {
 
 const EMPTY_LEARNER_FORM = {
   displayName: "",
-  lessonNumbers: "",
-  mazeCompletedLevels: "",
-  expertCompletedLevels: "",
+  lessonNumbers: [] as number[],
+  mazeCompletedLevels: [] as number[],
+  expertCompletedLevels: [] as number[],
   pcepChallengeCompleted: false,
 };
+const LEARNER_ROWS_PER_PAGE = 10;
 
 const EMPTY_CARD = {
   question: "",
@@ -123,6 +124,7 @@ export default function AdminPage() {
   const [editLearner, setEditLearner] = useState(EMPTY_LEARNER_FORM);
   const [learnerMessage, setLearnerMessage] = useState("");
   const [learnerError, setLearnerError] = useState("");
+  const [learnerPage, setLearnerPage] = useState(1);
 
   const loadData = useCallback(async () => {
     const [contentRes, learnersRes] = await Promise.all([
@@ -174,7 +176,12 @@ export default function AdminPage() {
     setSaving(false);
     if (res.ok) await loadData();
     const data = await res.json().catch(() => ({}));
-    return { ok: res.ok, error: data.error as string | undefined };
+    return {
+      ok: res.ok,
+      error:
+        (typeof data.error === "string" && data.error) ||
+        `HTTP ${res.status}: Speichern fehlgeschlagen.`,
+    };
   }
 
   async function handleLogin(e: FormEvent) {
@@ -242,6 +249,25 @@ export default function AdminPage() {
   const lessonExercises = exercises
     .filter((e) => e.lessonId === selectedLessonId)
     .sort((a, b) => a.order - b.order);
+  const sortedLearners = useMemo(
+    () =>
+      [...learners].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+      ),
+    [learners],
+  );
+  const learnerTotalPages = Math.max(
+    1,
+    Math.ceil(sortedLearners.length / LEARNER_ROWS_PER_PAGE),
+  );
+  const pagedLearners = useMemo(() => {
+    const start = (learnerPage - 1) * LEARNER_ROWS_PER_PAGE;
+    return sortedLearners.slice(start, start + LEARNER_ROWS_PER_PAGE);
+  }, [sortedLearners, learnerPage]);
+
+  useEffect(() => {
+    setLearnerPage((current) => Math.min(current, learnerTotalPages));
+  }, [learnerTotalPages]);
 
   function startEditCard(card: Flashcard) {
     setEditCardId(card.id);
@@ -269,9 +295,9 @@ export default function AdminPage() {
     setEditLearnerId(learner.id);
     setEditLearner({
       displayName: learner.displayName,
-      lessonNumbers: learner.lessonNumbers.join(", "),
-      mazeCompletedLevels: learner.mazeCompletedLevels.join(", "),
-      expertCompletedLevels: learner.expertCompletedLevels.join(", "),
+      lessonNumbers: learner.lessonNumbers,
+      mazeCompletedLevels: learner.mazeCompletedLevels,
+      expertCompletedLevels: learner.expertCompletedLevels,
       pcepChallengeCompleted: learner.pcepChallengeCompleted,
     });
     setLearnerMessage("");
@@ -776,7 +802,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {learners.map((learner) => (
+                    {pagedLearners.map((learner) => (
                       <tr key={learner.id}>
                         <td className="font-medium">{learner.displayName}</td>
                         <td className="text-xs">
@@ -784,12 +810,47 @@ export default function AdminPage() {
                             ? `Lektion ${learner.status.lessonNumber} · ${learner.status.percentComplete}%`
                             : "—"}
                         </td>
-                        <td className="text-xs">{learner.lessonNumbers.join(", ") || "—"}</td>
                         <td className="text-xs">
-                          {learner.mazeCompletedLevels.join(", ") || "—"}
+                          <div className="flex flex-wrap gap-1">
+                            {learner.lessonNumbers.length === 0 ? (
+                              <span className="opacity-60">—</span>
+                            ) : (
+                              learner.lessonNumbers.map((value) => (
+                                <span key={`lesson-${learner.id}-${value}`} className="badge badge-xs">
+                                  L{value}
+                                </span>
+                              ))
+                            )}
+                          </div>
                         </td>
                         <td className="text-xs">
-                          {learner.expertCompletedLevels.join(", ") || "—"}
+                          <div className="flex flex-wrap gap-1">
+                            {learner.mazeCompletedLevels.length === 0 ? (
+                              <span className="opacity-60">—</span>
+                            ) : (
+                              learner.mazeCompletedLevels.map((value) => (
+                                <span key={`maze-${learner.id}-${value}`} className="badge badge-primary badge-xs">
+                                  M{value}
+                                </span>
+                              ))
+                            )}
+                          </div>
+                        </td>
+                        <td className="text-xs">
+                          <div className="flex flex-wrap gap-1">
+                            {learner.expertCompletedLevels.length === 0 ? (
+                              <span className="opacity-60">—</span>
+                            ) : (
+                              learner.expertCompletedLevels.map((value) => (
+                                <span
+                                  key={`expert-${learner.id}-${value}`}
+                                  className="badge badge-secondary badge-xs"
+                                >
+                                  E{value}
+                                </span>
+                              ))
+                            )}
+                          </div>
                         </td>
                         <td className="text-xs">
                           {learner.pcepChallengeCompleted ? "✓" : "—"}
@@ -824,7 +885,7 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     ))}
-                    {learners.length === 0 && (
+                    {sortedLearners.length === 0 && (
                       <tr>
                         <td colSpan={7} className="text-sm opacity-60">
                           Noch keine Lernmonitor-Einträge vorhanden.
@@ -834,6 +895,33 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {sortedLearners.length > 0 && (
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="opacity-70">
+                    Seite {learnerPage} von {learnerTotalPages} · {sortedLearners.length} Einträge
+                  </span>
+                  <div className="join">
+                    <button
+                      type="button"
+                      className="btn btn-sm join-item"
+                      disabled={learnerPage <= 1}
+                      onClick={() => setLearnerPage((p) => Math.max(1, p - 1))}
+                    >
+                      Zurück
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm join-item"
+                      disabled={learnerPage >= learnerTotalPages}
+                      onClick={() =>
+                        setLearnerPage((p) => Math.min(learnerTotalPages, p + 1))
+                      }
+                    >
+                      Weiter
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {editLearnerId && (
                 <form
@@ -841,18 +929,13 @@ export default function AdminPage() {
                     e.preventDefault();
                     setLearnerMessage("");
                     setLearnerError("");
-                    const parseList = (value: string) =>
-                      value
-                        .split(",")
-                        .map((item) => Number(item.trim()))
-                        .filter((item) => Number.isInteger(item) && item > 0);
                     const result = await adminLearnerPost({
                       action: "update-learner",
                       learnerId: editLearnerId,
                       displayName: editLearner.displayName,
-                      lessonNumbers: parseList(editLearner.lessonNumbers),
-                      mazeCompletedLevels: parseList(editLearner.mazeCompletedLevels),
-                      expertCompletedLevels: parseList(editLearner.expertCompletedLevels),
+                      lessonNumbers: editLearner.lessonNumbers,
+                      mazeCompletedLevels: editLearner.mazeCompletedLevels,
+                      expertCompletedLevels: editLearner.expertCompletedLevels,
                       pcepChallengeCompleted: editLearner.pcepChallengeCompleted,
                     });
                     if (!result.ok) {
@@ -874,36 +957,111 @@ export default function AdminPage() {
                     placeholder="Name"
                     required
                   />
-                  <input
-                    className="input input-bordered input-sm"
-                    value={editLearner.lessonNumbers}
-                    onChange={(e) =>
-                      setEditLearner({ ...editLearner, lessonNumbers: e.target.value })
-                    }
-                    placeholder="Abgeschlossene Lektionen (z.B. 1,2,3)"
-                  />
-                  <input
-                    className="input input-bordered input-sm"
-                    value={editLearner.mazeCompletedLevels}
-                    onChange={(e) =>
-                      setEditLearner({
-                        ...editLearner,
-                        mazeCompletedLevels: e.target.value,
-                      })
-                    }
-                    placeholder="Labyrinth-Orden Level (z.B. 1,2)"
-                  />
-                  <input
-                    className="input input-bordered input-sm"
-                    value={editLearner.expertCompletedLevels}
-                    onChange={(e) =>
-                      setEditLearner({
-                        ...editLearner,
-                        expertCompletedLevels: e.target.value,
-                      })
-                    }
-                    placeholder="Experten-Orden Level (z.B. 1,2,3)"
-                  />
+                  <div className="rounded-lg border border-base-300 p-3">
+                    <p className="text-sm font-medium mb-2">Abgeschlossene Lektionen</p>
+                    <div className="flex flex-wrap gap-2">
+                      {lessons
+                        .slice()
+                        .sort((a, b) => a.order - b.order)
+                        .map((lesson, index) => {
+                          const lessonNumber = index + 1;
+                          const checked = editLearner.lessonNumbers.includes(lessonNumber);
+                          return (
+                            <label
+                              key={lesson.id}
+                              className="label cursor-pointer justify-start gap-2 p-0"
+                            >
+                              <input
+                                type="checkbox"
+                                className="checkbox checkbox-sm"
+                                checked={checked}
+                                onChange={(e) =>
+                                  setEditLearner({
+                                    ...editLearner,
+                                    lessonNumbers: e.target.checked
+                                      ? [...editLearner.lessonNumbers, lessonNumber].sort(
+                                          (a, b) => a - b,
+                                        )
+                                      : editLearner.lessonNumbers.filter(
+                                          (item) => item !== lessonNumber,
+                                        ),
+                                  })
+                                }
+                              />
+                              <span className="label-text text-sm">
+                                L{lessonNumber}: {lesson.title}
+                              </span>
+                            </label>
+                          );
+                        })}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-base-300 p-3">
+                    <p className="text-sm font-medium mb-2">Labyrinth-Orden</p>
+                    <div className="flex flex-wrap gap-3">
+                      {[1, 2, 3, 4].map((level) => {
+                        const checked = editLearner.mazeCompletedLevels.includes(level);
+                        return (
+                          <label
+                            key={`maze-${level}`}
+                            className="label cursor-pointer justify-start gap-2 p-0"
+                          >
+                            <input
+                              type="checkbox"
+                              className="checkbox checkbox-sm"
+                              checked={checked}
+                              onChange={(e) =>
+                                setEditLearner({
+                                  ...editLearner,
+                                  mazeCompletedLevels: e.target.checked
+                                    ? [...editLearner.mazeCompletedLevels, level].sort(
+                                        (a, b) => a - b,
+                                      )
+                                    : editLearner.mazeCompletedLevels.filter(
+                                        (item) => item !== level,
+                                      ),
+                                })
+                              }
+                            />
+                            <span className="label-text text-sm">Level {level}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-base-300 p-3">
+                    <p className="text-sm font-medium mb-2">Experten-Orden</p>
+                    <div className="flex flex-wrap gap-3">
+                      {[1, 2, 3].map((level) => {
+                        const checked = editLearner.expertCompletedLevels.includes(level);
+                        return (
+                          <label
+                            key={`expert-${level}`}
+                            className="label cursor-pointer justify-start gap-2 p-0"
+                          >
+                            <input
+                              type="checkbox"
+                              className="checkbox checkbox-sm"
+                              checked={checked}
+                              onChange={(e) =>
+                                setEditLearner({
+                                  ...editLearner,
+                                  expertCompletedLevels: e.target.checked
+                                    ? [...editLearner.expertCompletedLevels, level].sort(
+                                        (a, b) => a - b,
+                                      )
+                                    : editLearner.expertCompletedLevels.filter(
+                                        (item) => item !== level,
+                                      ),
+                                })
+                              }
+                            />
+                            <span className="label-text text-sm">Level {level}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <label className="label cursor-pointer justify-start gap-3">
                     <input
                       type="checkbox"
