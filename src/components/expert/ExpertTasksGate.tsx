@@ -32,7 +32,7 @@ export default function ExpertTasksGate({ children }: ExpertTasksGateProps) {
         </p>
         <h1 className="text-2xl font-bold mb-3">Experten-Aufgaben noch gesperrt</h1>
         <p className="opacity-80 mb-6">
-          Schließe zuerst <strong>Lektion 3</strong> ab. Dann kannst du die Experten-Aufgaben
+          Schließe zuerst <strong>Lektion 4</strong> ab. Dann kannst du die Experten-Aufgaben
           mit automatischer Code-Prüfung lösen.
         </p>
         <Link href="/" className="btn btn-primary">

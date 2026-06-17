@@ -28,8 +28,8 @@ function deriveCompletedLevels(completedTaskIds: string[]): number[] {
 }
 
 export function isExpertTasksUnlocked(lessonProgress: LessonProgress[]): boolean {
-  const lesson3 = lessonProgress.find((item) => item.lessonId === "lektion-3");
-  return hasEverCompletedLesson(lesson3);
+  const lesson4 = lessonProgress.find((item) => item.lessonId === "lektion-4");
+  return hasEverCompletedLesson(lesson4);
 }
 
 export function readExpertProgress(): ExpertProgress {

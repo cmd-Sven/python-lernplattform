@@ -34,7 +34,7 @@ export default function PytoExpertTasksReward({
           <span className="badge badge-secondary badge-lg mb-2">Experten-Modus</span>
           <h2 className="text-2xl font-bold mb-2">Experten-Aufgaben</h2>
           <p className="opacity-85 mb-4">
-            Du hast Lektion 3 geschafft – jetzt warten echte Code-Herausforderungen mit
+            Du hast Lektion 4 geschafft – jetzt warten echte Code-Herausforderungen mit
             automatischer Prüfung. Pro Level zwei Aufgaben; für jedes abgeschlossene Level
             gibt es einen <strong>Ordner</strong> im Lernmonitor.
           </p>
