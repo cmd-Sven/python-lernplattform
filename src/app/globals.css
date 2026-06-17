@@ -1795,3 +1795,18 @@ body {
 .maze-speech-bubble--devil::before {
   border-top-color: #450a0a;
 }
+
+@keyframes guestbook-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.guestbook-slider-page {
+  animation: guestbook-slide-in 0.45s ease;
+}

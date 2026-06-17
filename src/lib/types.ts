@@ -93,3 +93,14 @@ export interface LessonWithStats extends Lesson {
   lessonCompleted: boolean;
   completionCount: number;
 }
+
+export interface GuestbookEntry {
+  id: string;
+  visitorId?: string;
+  authorName: string;
+  comment: string;
+  stars: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

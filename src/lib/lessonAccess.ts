@@ -84,6 +84,21 @@ export function allPublishedLessonsCompleted(
   return published.every((lesson) => lesson.lessonCompleted);
 }
 
+/** Hauptlektion, nach deren Abschluss das Gästebuch freigeschaltet wird. */
+export const GUESTBOOK_UNLOCK_LESSON_NUMBER = 4;
+
+export function isLessonNumberCompleted(
+  lessons: LessonWithStats[],
+  lessonNumber: number,
+): boolean {
+  const lesson = sortLessonsByOrder(lessons)[lessonNumber - 1];
+  return Boolean(lesson?.lessonCompleted);
+}
+
+export function isGuestbookUnlocked(lessons: LessonWithStats[]): boolean {
+  return isLessonNumberCompleted(lessons, GUESTBOOK_UNLOCK_LESSON_NUMBER);
+}
+
 export function hasUnpublishedLessons(lessons: Lesson[]): boolean {
   return lessons.some((lesson) => !lesson.published);
 }

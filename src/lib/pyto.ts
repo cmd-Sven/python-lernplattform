@@ -5,6 +5,8 @@ import {
   allPublishedLessonsCompleted,
   getLessonNumber,
   hasUnpublishedLessons,
+  isGuestbookUnlocked,
+  isLessonNumberCompleted,
   sortLessonsByOrder,
 } from "./lessonAccess";
 
@@ -36,12 +38,6 @@ export const PYTO_IMAGES = {
 
 export type PytoVariant = keyof typeof PYTO_IMAGES;
 
-function getNextUnpublishedLessonNumber(lessons: LessonWithStats[]): number | null {
-  const next = sortLessonsByOrder(lessons).find((lesson) => !lesson.published);
-  if (!next) return null;
-  return getLessonNumber(next, lessons);
-}
-
 function isLessonCompleted(lessons: LessonWithStats[], lessonNumber: number): boolean {
   const lesson = lessons.find(
     (item) => getLessonNumber(item, lessons) === lessonNumber,
@@ -53,31 +49,25 @@ function getCaughtUpHomeMessage(lessons: LessonWithStats[]): string {
   const lesson1Done = isLessonCompleted(lessons, 1);
   const lesson2Done = isLessonCompleted(lessons, 2);
   const lesson3Done = isLessonCompleted(lessons, 3);
-  const nextLesson = getNextUnpublishedLessonNumber(lessons);
-  const nextLessonHint =
-    nextLesson === 4
-      ? "Lektion 4 – Funktionen & Fehler – ist in Arbeit und kommt bald!"
-      : nextLesson
-        ? `Lektion ${nextLesson} ist derzeit noch nicht verfügbar – folgt aber bald!`
-        : "Die nächste Lektion folgt bald!";
+  const lesson4Done = isLessonCompleted(lessons, 4);
 
-  if (lesson1Done && lesson2Done && lesson3Done && isLessonCompleted(lessons, 4)) {
-    return "Alle vier Lektionen geschafft! Die PCEP-Challenge mit 12 Prüfungsfragen wartet auf der Startseite auf dich.";
+  if (lesson1Done && lesson2Done && lesson3Done && lesson4Done) {
+    return "Alle Hauptlektionen geschafft! Die Zusatzlektionen, das Labyrinth, die Experten-Aufgaben und die PCEP-Challenge warten auf dich.";
   }
 
   if (lesson1Done && lesson2Done && lesson3Done) {
-    return `Großartig! Du hast Lektion 1 bis 3 gemeistert – Listen, Tupel und Strings sitzen. Als Belohnung bleibt das Python-Labyrinth freigeschaltet. ${nextLessonHint}`;
+    return "Großartig! Du hast Lektion 1 bis 3 gemeistert – als Belohnung bleibt das Python-Labyrinth freigeschaltet. Weiter mit Lektion 4!";
   }
 
   if (lesson1Done && lesson2Done) {
-    return `Starke Leistung! Du hast Lektion 1 und 2 hinter dir – als Belohnung ist das Python-Labyrinth für dich freigeschaltet! ${nextLessonHint}`;
+    return "Starke Leistung! Du hast Lektion 1 und 2 hinter dir – als Belohnung ist das Python-Labyrinth für dich freigeschaltet!";
   }
 
   if (lesson1Done) {
-    return `Starke Leistung! Du hast Lektion 1 hinter dir. ${nextLessonHint} Das Python-Labyrinth schalten wir frei, sobald du auch Lektion 2 geschafft hast.`;
+    return "Starke Leistung! Du hast Lektion 1 hinter dir. Das Python-Labyrinth schalten wir frei, sobald du auch Lektion 2 geschafft hast.";
   }
 
-  return `Starke Leistung! Du hast alle verfügbaren Lektionen abgeschlossen. ${nextLessonHint}`;
+  return "Starke Leistung! Du hast alle verfügbaren Lektionen abgeschlossen.";
 }
 
 export function getPytoForHome(
@@ -86,6 +76,7 @@ export function getPytoForHome(
   totalCards: number,
   lessons: LessonWithStats[],
   newlyAvailableLesson?: { title: string; lessonNumber: number } | null,
+  guestbookPending?: boolean,
 ): { variant: PytoVariant; message: string } {
   if (!onboarded) {
     return {
@@ -102,11 +93,35 @@ export function getPytoForHome(
     };
   }
 
+  if (isGuestbookUnlocked(lessons) && guestbookPending) {
+    return {
+      variant: "froehlich",
+      message:
+        "Du hast Lektion 4 geschafft – alle Hauptlektionen sind durch! Bewerte die Lernplattform mit 1 bis 5 Sternen und hinterlasse einen kurzen Gästebucheintrag. Dein Feedback hilft anderen Lernenden!",
+    };
+  }
+
+  if (isLessonNumberCompleted(lessons, 4)) {
+    return {
+      variant: "erfolg",
+      message:
+        "Alle vier Hauptlektionen geschafft! Die PCEP-Challenge, Experten-Aufgaben, Zusatzlektionen und das Labyrinth warten auf dich.",
+    };
+  }
+
+  if (allPublishedLessonsCompleted(lessons)) {
+    return {
+      variant: "erfolg",
+      message:
+        "Wow, alle Lektionen geschafft – inklusive der Zusatzlektionen! Ich bin stolz auf dich!",
+    };
+  }
+
   if (allLessonsCompleted(lessons)) {
     return {
       variant: "erfolg",
       message:
-        "Wow, alle vier Lektionen geschafft! Die **PCEP-Challenge** wartet auf dich – 12 Prüfungsfragen gegen die Uhr. Ich bin stolz auf dich!",
+        "Alle Lektionen abgeschlossen! Die PCEP-Challenge wartet auf dich – 12 Prüfungsfragen gegen die Uhr. Ich bin stolz auf dich!",
     };
   }
 
@@ -205,11 +220,11 @@ export function getPytoForLessonComplete(
   totalLessons: number,
   nextLesson?: { title: string; published: boolean },
 ): { variant: PytoVariant; message: string } {
-  if (lessonNumber >= totalLessons || lessonNumber === 4) {
+  if (lessonNumber === 4) {
     return {
       variant: "erfolg",
       message:
-        "Wow! Du hast **alle vier Lektionen** geschafft – ich bin stolz auf dich! Auf der Startseite ist jetzt die **PCEP-Challenge** freigeschaltet: 12 Prüfungsfragen, deine Zeit wird gemessen. Zeig, was du drauf hast!",
+        "Wow! Du hast alle vier Hauptlektionen geschafft – ich bin stolz auf dich! Auf der Startseite kannst du die Lernplattform mit Sternen bewerten und einen Gästebucheintrag hinterlassen.",
     };
   }
 
@@ -220,16 +235,16 @@ export function getPytoForLessonComplete(
     };
   }
 
-  if (lessonNumber === 3) {
+  if (lessonNumber >= totalLessons) {
     return {
       variant: "erfolg",
       message:
-        "Lektion 3 geschafft! Listen, Tupel und Strings – du hast Datenstrukturen im Griff. **Lektion 4 – Funktionen & Fehler** kommt bald – ich sage dir Bescheid, sobald du weitermachen kannst!",
+        "Lektion geschafft! Schau auf der Startseite, was als Nächstes auf dich wartet.",
     };
   }
 
   return {
     variant: "erfolg",
-    message: `Lektion ${lessonNumber} geschafft! Die nächsten Lektionen kommen bald – ich sage dir Bescheid, sobald du weitermachen kannst.`,
+    message: `Lektion ${lessonNumber} geschafft! Weiter so – du bist auf einem guten Weg.`,
   };
 }

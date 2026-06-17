@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { enrichLessonAccess } from "@/lib/lessonAccess";
+import { enrichLessonAccess, isGuestbookUnlocked } from "@/lib/lessonAccess";
 import { getPytoForHome } from "@/lib/pyto";
 import {
   clearAllVisitorData,
   getAnnouncedLessonIds,
   getVisitorState,
+  hasGuestbookSubmitted,
   markLessonsAnnounced,
   markVisitorReturning,
   setVisitorOnboarded,
@@ -38,9 +39,13 @@ import ProgressBar from "./ProgressBar";
 import PytoLabyrinthReward from "./PytoLabyrinthReward";
 import PytoExpertTasksReward from "./expert/PytoExpertTasksReward";
 import PytoMascot from "./PytoMascot";
+import GuestbookSlider from "./GuestbookSlider";
+import GuestbookPrompt from "./GuestbookPrompt";
+import type { GuestbookEntry } from "@/lib/types";
 
 interface HomeClientProps {
   lessons: LessonWithCardCount[];
+  guestbookEntries: GuestbookEntry[];
 }
 
 function clearLocalCodeStorage() {
@@ -52,7 +57,10 @@ function clearLocalCodeStorage() {
   keysToRemove.forEach((k) => localStorage.removeItem(k));
 }
 
-export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
+export default function HomeClient({
+  lessons: baseLessons,
+  guestbookEntries: initialGuestbookEntries,
+}: HomeClientProps) {
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
@@ -79,6 +87,8 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
   const [pcepChallengeUnlocked, setPcepChallengeUnlocked] = useState(false);
   const [expertTasksUnlocked, setExpertTasksUnlocked] = useState(false);
   const [expertCompletedLevels, setExpertCompletedLevels] = useState<number[]>([]);
+  const [guestbookEntries, setGuestbookEntries] = useState(initialGuestbookEntries);
+  const [guestbookSubmitted, setGuestbookSubmitted] = useState(false);
 
   const refreshProgress = useCallback(() => {
     const progress = getLessonProgressList();
@@ -147,6 +157,7 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
       refreshProgress();
       if (wasReset) scheduleLearnerBoardSync();
       setHydrated(true);
+      setGuestbookSubmitted(hasGuestbookSubmitted());
     })();
 
     return () => {
@@ -178,12 +189,16 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     };
   }, [hydrated, refreshProgress]);
 
+  const guestbookUnlocked = isGuestbookUnlocked(lessons);
+  const guestbookPending = guestbookUnlocked && !guestbookSubmitted;
+
   const pyto = getPytoForHome(
     onboarded,
     totalCompleted,
     totalCards,
     lessons,
     newlyAvailableLesson,
+    guestbookPending,
   );
 
   function handleNameSubmit(e: FormEvent) {
@@ -312,6 +327,18 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
           />
         </div>
       </section>
+
+      <GuestbookSlider entries={guestbookEntries} />
+
+      {guestbookPending && (
+        <GuestbookPrompt
+          authorName={name}
+          onSubmitted={(entry) => {
+            setGuestbookSubmitted(true);
+            setGuestbookEntries((current) => [entry, ...current]);
+          }}
+        />
+      )}
 
       <LearnerMonitor />
 

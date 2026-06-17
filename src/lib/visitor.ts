@@ -3,6 +3,7 @@ const VISITOR_ONBOARDED_KEY = "pcep-visitor-onboarded";
 const VISITOR_RETURNING_KEY = "pcep-visitor-returning";
 const VISITOR_ID_KEY = "pcep-visitor-id";
 const ANNOUNCED_LESSONS_KEY = "pcep-announced-lessons";
+const GUESTBOOK_SUBMITTED_KEY = "pcep-guestbook-submitted";
 
 export function getVisitorState(): {
   name: string;
@@ -61,6 +62,16 @@ export function markLessonsAnnounced(lessonIds: string[]): void {
   localStorage.setItem(ANNOUNCED_LESSONS_KEY, JSON.stringify([...current]));
 }
 
+export function hasGuestbookSubmitted(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(GUESTBOOK_SUBMITTED_KEY) === "true";
+}
+
+export function markGuestbookSubmitted(): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(GUESTBOOK_SUBMITTED_KEY, "true");
+}
+
 export function clearVisitorState(): void {
   localStorage.removeItem(VISITOR_NAME_KEY);
   localStorage.removeItem(VISITOR_ONBOARDED_KEY);
@@ -73,6 +84,7 @@ export function clearAllVisitorData(): void {
     localStorage.removeItem("pcep-visitor-progress");
     localStorage.removeItem("pcep-challenge-progress");
     localStorage.removeItem(ANNOUNCED_LESSONS_KEY);
+    localStorage.removeItem(GUESTBOOK_SUBMITTED_KEY);
     window.dispatchEvent(new Event("pcep-progress-updated"));
     window.dispatchEvent(new Event("pcep-challenge-progress-updated"));
   }

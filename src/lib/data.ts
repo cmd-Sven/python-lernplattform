@@ -4,7 +4,7 @@ import { isStaleLearnerDuplicate } from "./learnerDedup";
 import type { StoredLearner } from "./learnerBoard";
 import type { MazeHighscoreEntry } from "./maze/highscores";
 import { sortMazeHighscores } from "./maze/highscores";
-import type { Exercise, Flashcard, Lesson, LessonProgress, SiteProgress } from "./types";
+import type { Exercise, Flashcard, GuestbookEntry, Lesson, LessonProgress, SiteProgress } from "./types";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase/server";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -15,6 +15,7 @@ const exercisesPath = path.join(DATA_DIR, "exercises.json");
 const progressPath = path.join(DATA_DIR, "progress.json");
 const learnersPath = path.join(DATA_DIR, "learners.json");
 const mazeScoresPath = path.join(DATA_DIR, "maze-scores.json");
+const guestbookPath = path.join(DATA_DIR, "guestbook.json");
 
 async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   try {
@@ -696,4 +697,190 @@ export async function upsertMazeHighscore(
   all.push(next);
   await writeJson(mazeScoresPath, all);
   return next;
+}
+
+type GuestbookRow = {
+  id: string;
+  visitor_id: string | null;
+  author_name: string;
+  comment: string;
+  stars: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+function mapGuestbookEntry(row: GuestbookRow): GuestbookEntry {
+  return {
+    id: row.id,
+    visitorId: row.visitor_id ?? undefined,
+    authorName: row.author_name,
+    comment: row.comment,
+    stars: row.stars,
+    active: row.active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function guestbookToRow(entry: GuestbookEntry): GuestbookRow {
+  return {
+    id: entry.id,
+    visitor_id: entry.visitorId ?? null,
+    author_name: entry.authorName,
+    comment: entry.comment,
+    stars: entry.stars,
+    active: entry.active,
+    created_at: entry.createdAt,
+    updated_at: entry.updatedAt,
+  };
+}
+
+export async function getGuestbookEntries(activeOnly = false): Promise<GuestbookEntry[]> {
+  if (isSupabaseConfigured()) {
+    let query = getSupabaseAdmin()
+      .from("pcep_guestbook_entries")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (activeOnly) {
+      query = query.eq("active", true);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map((row) => mapGuestbookEntry(row as GuestbookRow));
+  }
+
+  const entries = await readJson<GuestbookEntry[]>(guestbookPath, []);
+  return activeOnly ? entries.filter((entry) => entry.active) : entries;
+}
+
+export async function hasGuestbookEntryForVisitor(visitorId: string): Promise<boolean> {
+  if (!visitorId.trim()) return false;
+
+  if (isSupabaseConfigured()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("pcep_guestbook_entries")
+      .select("id")
+      .eq("visitor_id", visitorId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return Boolean(data);
+  }
+
+  const entries = await readJson<GuestbookEntry[]>(guestbookPath, []);
+  return entries.some((entry) => entry.visitorId === visitorId);
+}
+
+export async function createGuestbookEntry(input: {
+  visitorId?: string;
+  authorName: string;
+  comment: string;
+  stars: number;
+}): Promise<GuestbookEntry> {
+  const now = new Date().toISOString();
+  const trimmedName = input.authorName.trim().slice(0, 40);
+  const trimmedComment = input.comment.trim().slice(0, 500);
+  const stars = Math.min(5, Math.max(1, Math.round(input.stars)));
+
+  if (!trimmedName) throw new Error("Name fehlt");
+  if (trimmedComment.length < 5) {
+    throw new Error("Bitte schreibe mindestens 5 Zeichen.");
+  }
+
+  if (input.visitorId?.trim()) {
+    const exists = await hasGuestbookEntryForVisitor(input.visitorId.trim());
+    if (exists) throw new Error("Du hast bereits einen Gästebucheintrag hinterlassen.");
+  }
+
+  const entry: GuestbookEntry = {
+    id: crypto.randomUUID(),
+    visitorId: input.visitorId?.trim() || undefined,
+    authorName: trimmedName,
+    comment: trimmedComment,
+    stars,
+    active: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  if (isSupabaseConfigured()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("pcep_guestbook_entries")
+      .insert(guestbookToRow(entry))
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return mapGuestbookEntry(data as GuestbookRow);
+  }
+
+  const entries = await readJson<GuestbookEntry[]>(guestbookPath, []);
+  entries.unshift(entry);
+  await writeJson(guestbookPath, entries);
+  return entry;
+}
+
+export async function updateGuestbookEntry(
+  id: string,
+  patch: Partial<Pick<GuestbookEntry, "authorName" | "comment" | "stars" | "active">>,
+): Promise<GuestbookEntry> {
+  const entries = await getGuestbookEntries();
+  const current = entries.find((entry) => entry.id === id);
+  if (!current) throw new Error("Eintrag nicht gefunden");
+
+  const next: GuestbookEntry = {
+    ...current,
+    authorName: patch.authorName?.trim().slice(0, 40) ?? current.authorName,
+    comment: patch.comment?.trim().slice(0, 500) ?? current.comment,
+    stars:
+      patch.stars !== undefined
+        ? Math.min(5, Math.max(1, Math.round(patch.stars)))
+        : current.stars,
+    active: patch.active ?? current.active,
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (!next.authorName.trim()) throw new Error("Name fehlt");
+  if (next.comment.trim().length < 5) {
+    throw new Error("Kommentar zu kurz");
+  }
+
+  if (isSupabaseConfigured()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("pcep_guestbook_entries")
+      .update(guestbookToRow(next))
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return mapGuestbookEntry(data as GuestbookRow);
+  }
+
+  const all = await readJson<GuestbookEntry[]>(guestbookPath, []);
+  const idx = all.findIndex((entry) => entry.id === id);
+  if (idx < 0) throw new Error("Eintrag nicht gefunden");
+  all[idx] = next;
+  await writeJson(guestbookPath, all);
+  return next;
+}
+
+export async function deleteGuestbookEntry(id: string): Promise<void> {
+  if (isSupabaseConfigured()) {
+    const { error } = await getSupabaseAdmin()
+      .from("pcep_guestbook_entries")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return;
+  }
+
+  const entries = await readJson<GuestbookEntry[]>(guestbookPath, []);
+  await writeJson(
+    guestbookPath,
+    entries.filter((entry) => entry.id !== id),
+  );
 }

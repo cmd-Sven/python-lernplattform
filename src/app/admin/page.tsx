@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import type { Exercise, Flashcard, Lesson } from "@/lib/types";
+import type { Exercise, Flashcard, GuestbookEntry, Lesson } from "@/lib/types";
 import { linesToMessages, messagesToLines } from "@/lib/pytoTips";
 import Link from "next/link";
 import {
@@ -9,7 +9,7 @@ import {
   clearVisitorProgressOnly,
 } from "@/lib/progressReset";
 
-type AdminTab = "lektionen" | "karten" | "uebungen" | "spiele" | "fortschritt";
+type AdminTab = "lektionen" | "karten" | "uebungen" | "spiele" | "fortschritt" | "gaestebuch";
 
 type AdminLearner = {
   id: string;
@@ -32,6 +32,12 @@ const EMPTY_LEARNER_FORM = {
   mazeCompletedLevels: [] as number[],
   expertCompletedLevels: [] as number[],
   pcepChallengeCompleted: false,
+};
+const EMPTY_GUESTBOOK_FORM = {
+  authorName: "",
+  comment: "",
+  stars: 5,
+  active: true,
 };
 const LEARNER_ROWS_PER_PAGE = 10;
 
@@ -125,26 +131,38 @@ export default function AdminPage() {
   const [learnerMessage, setLearnerMessage] = useState("");
   const [learnerError, setLearnerError] = useState("");
   const [learnerPage, setLearnerPage] = useState(1);
+  const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
+  const [editGuestbookId, setEditGuestbookId] = useState<string | null>(null);
+  const [editGuestbook, setEditGuestbook] = useState(EMPTY_GUESTBOOK_FORM);
+  const [guestbookMessage, setGuestbookMessage] = useState("");
+  const [guestbookError, setGuestbookError] = useState("");
 
   const loadData = useCallback(async () => {
-    const [contentRes, learnersRes] = await Promise.all([
+    const [contentRes, learnersRes, guestbookRes] = await Promise.all([
       fetch("/api/admin/lessons"),
       fetch("/api/admin/learners"),
+      fetch("/api/admin/guestbook"),
     ]);
 
-    if (contentRes.status === 401 || learnersRes.status === 401) {
+    if (
+      contentRes.status === 401 ||
+      learnersRes.status === 401 ||
+      guestbookRes.status === 401
+    ) {
       setAuthenticated(false);
       setLoading(false);
       return;
     }
-    if (!contentRes.ok || !learnersRes.ok) return;
+    if (!contentRes.ok || !learnersRes.ok || !guestbookRes.ok) return;
 
     const contentData = await contentRes.json();
     const learnersData = await learnersRes.json();
+    const guestbookData = await guestbookRes.json();
     setLessons(contentData.lessons);
     setCards(contentData.cards);
     setExercises(contentData.exercises ?? []);
     setLearners(learnersData.learners ?? []);
+    setGuestbookEntries(guestbookData.entries ?? []);
     setAuthenticated(true);
     setLoading(false);
     setSelectedLessonId((prev) => prev || contentData.lessons[0]?.id || "");
@@ -164,6 +182,24 @@ export default function AdminPage() {
     setSaving(false);
     if (res.ok) await loadData();
     return res.ok;
+  }
+
+  async function adminGuestbookPost(payload: Record<string, unknown>) {
+    setSaving(true);
+    const res = await fetch("/api/admin/guestbook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    setSaving(false);
+    if (res.ok) await loadData();
+    const data = await res.json().catch(() => ({}));
+    return {
+      ok: res.ok,
+      error:
+        (typeof data.error === "string" && data.error) ||
+        `HTTP ${res.status}: Speichern fehlgeschlagen.`,
+    };
   }
 
   async function adminLearnerPost(payload: Record<string, unknown>) {
@@ -291,6 +327,19 @@ export default function AdminPage() {
     setTab("lektionen");
   }
 
+  function startEditGuestbook(entry: GuestbookEntry) {
+    setEditGuestbookId(entry.id);
+    setEditGuestbook({
+      authorName: entry.authorName,
+      comment: entry.comment,
+      stars: entry.stars,
+      active: entry.active,
+    });
+    setGuestbookMessage("");
+    setGuestbookError("");
+    setTab("gaestebuch");
+  }
+
   function startEditLearner(learner: AdminLearner) {
     setEditLearnerId(learner.id);
     setEditLearner({
@@ -356,6 +405,7 @@ export default function AdminPage() {
             ["uebungen", "Übungen"],
             ["spiele", "Spiele"],
             ["fortschritt", "Fortschritt"],
+            ["gaestebuch", "Gästebuch"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -1139,6 +1189,206 @@ export default function AdminPage() {
             </div>
           </section>
         </div>
+      )}
+
+      {tab === "gaestebuch" && (
+        <section className="card bg-base-100 shadow border border-base-300">
+          <div className="card-body gap-4">
+            <h2 className="card-title">Gästebuch verwalten</h2>
+            <p className="text-sm opacity-80">
+              Einträge bearbeiten, aktivieren oder deaktivieren. Nur aktive Einträge
+              erscheinen im Slider auf der Startseite.
+            </p>
+
+            {guestbookMessage && (
+              <div className="alert alert-success text-sm">
+                <span>{guestbookMessage}</span>
+              </div>
+            )}
+            {guestbookError && (
+              <div className="alert alert-error text-sm">
+                <span>{guestbookError}</span>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Sterne</th>
+                    <th>Kommentar</th>
+                    <th>Status</th>
+                    <th>Datum</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {guestbookEntries.map((entry) => (
+                    <tr key={entry.id} className={!entry.active ? "opacity-50" : ""}>
+                      <td className="font-medium">{entry.authorName}</td>
+                      <td>{"★".repeat(entry.stars)}</td>
+                      <td className="max-w-xs truncate text-xs">{entry.comment}</td>
+                      <td>
+                        <span
+                          className={`badge badge-xs ${
+                            entry.active ? "badge-success" : "badge-ghost"
+                          }`}
+                        >
+                          {entry.active ? "aktiv" : "inaktiv"}
+                        </span>
+                      </td>
+                      <td className="text-xs whitespace-nowrap">
+                        {new Date(entry.createdAt).toLocaleDateString("de-DE")}
+                      </td>
+                      <td className="flex gap-1">
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => startEditGuestbook(entry)}
+                        >
+                          Bearbeiten
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={async () => {
+                            const result = await adminGuestbookPost({
+                              action: "toggle-active",
+                              entryId: entry.id,
+                              active: !entry.active,
+                            });
+                            if (!result.ok) {
+                              setGuestbookError(result.error ?? "Statusänderung fehlgeschlagen.");
+                              return;
+                            }
+                            setGuestbookMessage(
+                              entry.active ? "Eintrag deaktiviert." : "Eintrag aktiviert.",
+                            );
+                          }}
+                        >
+                          {entry.active ? "Deaktivieren" : "Aktivieren"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs text-error"
+                          onClick={async () => {
+                            if (!confirm("Gästebucheintrag wirklich löschen?")) return;
+                            const result = await adminGuestbookPost({
+                              action: "delete-entry",
+                              entryId: entry.id,
+                            });
+                            if (!result.ok) {
+                              setGuestbookError(result.error ?? "Löschen fehlgeschlagen.");
+                              return;
+                            }
+                            setGuestbookMessage("Eintrag gelöscht.");
+                            if (editGuestbookId === entry.id) setEditGuestbookId(null);
+                          }}
+                        >
+                          Löschen
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {guestbookEntries.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-sm opacity-60">
+                        Noch keine Gästebucheinträge vorhanden.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {editGuestbookId && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setGuestbookMessage("");
+                  setGuestbookError("");
+                  const result = await adminGuestbookPost({
+                    action: "update-entry",
+                    entryId: editGuestbookId,
+                    authorName: editGuestbook.authorName,
+                    comment: editGuestbook.comment,
+                    stars: editGuestbook.stars,
+                    active: editGuestbook.active,
+                  });
+                  if (!result.ok) {
+                    setGuestbookError(result.error ?? "Speichern fehlgeschlagen.");
+                    return;
+                  }
+                  setGuestbookMessage("Gästebucheintrag gespeichert.");
+                  setEditGuestbookId(null);
+                }}
+                className="flex flex-col gap-3 p-4 bg-base-200 rounded-xl border border-primary"
+              >
+                <h3 className="font-semibold">Eintrag bearbeiten</h3>
+                <input
+                  className="input input-bordered input-sm"
+                  value={editGuestbook.authorName}
+                  onChange={(e) =>
+                    setEditGuestbook({ ...editGuestbook, authorName: e.target.value })
+                  }
+                  placeholder="Name"
+                  required
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Sterne:</span>
+                  <select
+                    className="select select-bordered select-sm w-24"
+                    value={editGuestbook.stars}
+                    onChange={(e) =>
+                      setEditGuestbook({
+                        ...editGuestbook,
+                        stars: Number(e.target.value),
+                      })
+                    }
+                  >
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <textarea
+                  className="textarea textarea-bordered textarea-sm min-h-28"
+                  value={editGuestbook.comment}
+                  onChange={(e) =>
+                    setEditGuestbook({ ...editGuestbook, comment: e.target.value })
+                  }
+                  required
+                />
+                <label className="label cursor-pointer justify-start gap-3">
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm"
+                    checked={editGuestbook.active}
+                    onChange={(e) =>
+                      setEditGuestbook({ ...editGuestbook, active: e.target.checked })
+                    }
+                  />
+                  <span className="label-text">Auf der Startseite anzeigen</span>
+                </label>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
+                    Speichern
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setEditGuestbookId(null)}
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
       )}
     </div>
   );

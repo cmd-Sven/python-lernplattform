@@ -28,7 +28,7 @@
     "title": "Lektion 4 – Funktionen & Fehler",
     "description": "Funktionsdefinition, Parameter, Rückgabewerte und Exception Handling.",
     "order": 4,
-    "published": false,
+    "published": true,
     "pcepTopic": "PCEP Modul 4: Functions and Exceptions"
   },
   {
@@ -36,7 +36,7 @@
     "title": "Zusatz – Python Vokabeln",
     "description": "Code-Elemente erkennen: Schlüsselwörter, Operatoren und Literale – Englisch und Deutsch.",
     "order": 5,
-    "published": false,
+    "published": true,
     "pcepTopic": "Zusatz: Python-Sprachvokabular"
   },
   {
@@ -44,7 +44,7 @@
     "title": "Zusatz – Code lesen und verstehen",
     "description": "Längere Code-Abschnitte analysieren und Syntaxfehler finden – wie in echten Prüfungsaufgaben.",
     "order": 6,
-    "published": false,
+    "published": true,
     "pcepTopic": "Zusatz: Code-Analyse und Fehlersuche"
   }
 ]
