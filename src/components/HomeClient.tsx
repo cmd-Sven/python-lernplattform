@@ -23,6 +23,11 @@ import { scheduleLearnerBoardSync } from "@/lib/learnerSync";
 import { applyServerProgressResetIfNeeded } from "@/lib/progressReset";
 import { isLabyrinthUnlocked, readMazeProgress } from "@/lib/maze/progress";
 import {
+  isExpertTasksUnlocked,
+  readExpertProgress,
+  EXPERT_PROGRESS_EVENT,
+} from "@/lib/expert/progress";
+import {
   isPcepChallengeUnlocked,
   PCEP_CHALLENGE_PROGRESS_EVENT,
 } from "@/lib/pcepChallenge/progress";
@@ -31,6 +36,7 @@ import LessonCard from "./LessonCard";
 import LearnerMonitor from "./LearnerMonitor";
 import ProgressBar from "./ProgressBar";
 import PytoLabyrinthReward from "./PytoLabyrinthReward";
+import PytoExpertTasksReward from "./expert/PytoExpertTasksReward";
 import PytoMascot from "./PytoMascot";
 
 interface HomeClientProps {
@@ -71,6 +77,8 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
   const [labyrinthUnlocked, setLabyrinthUnlocked] = useState(false);
   const [mazeCompletedLevels, setMazeCompletedLevels] = useState<number[]>([]);
   const [pcepChallengeUnlocked, setPcepChallengeUnlocked] = useState(false);
+  const [expertTasksUnlocked, setExpertTasksUnlocked] = useState(false);
+  const [expertCompletedLevels, setExpertCompletedLevels] = useState<number[]>([]);
 
   const refreshProgress = useCallback(() => {
     const progress = getLessonProgressList();
@@ -107,6 +115,8 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     setLabyrinthUnlocked(isLabyrinthUnlocked(progress));
     setMazeCompletedLevels(readMazeProgress().completedLevels);
     setPcepChallengeUnlocked(isPcepChallengeUnlocked(progress));
+    setExpertTasksUnlocked(isExpertTasksUnlocked(progress));
+    setExpertCompletedLevels(readExpertProgress().completedLevels);
     setNewlyAvailableLesson(
       newlyAvailable
         ? {
@@ -160,9 +170,11 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
     const onUpdate = () => refreshProgress();
     window.addEventListener(PROGRESS_UPDATED_EVENT, onUpdate);
     window.addEventListener(PCEP_CHALLENGE_PROGRESS_EVENT, onUpdate);
+    window.addEventListener(EXPERT_PROGRESS_EVENT, onUpdate);
     return () => {
       window.removeEventListener(PROGRESS_UPDATED_EVENT, onUpdate);
       window.removeEventListener(PCEP_CHALLENGE_PROGRESS_EVENT, onUpdate);
+      window.removeEventListener(EXPERT_PROGRESS_EVENT, onUpdate);
     };
   }, [hydrated, refreshProgress]);
 
@@ -308,6 +320,10 @@ export default function HomeClient({ lessons: baseLessons }: HomeClientProps) {
       )}
 
       {pcepChallengeUnlocked && <PytoPcepChallengeReward />}
+
+      {expertTasksUnlocked && (
+        <PytoExpertTasksReward completedLevels={expertCompletedLevels} />
+      )}
 
       <section>
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">

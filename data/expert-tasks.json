@@ -1,0 +1,117 @@
+[
+  {
+    "id": "ex-l1-01",
+    "levelId": 1,
+    "order": 1,
+    "title": "Klausur-Auswertung",
+    "pytoIntroMessage": "Oh, irgendwas stimmt hier nicht … Mit **82 Punkten** im Schnitt bin ich sicher, dass ich bestanden habe!",
+    "task": "**Experten-Aufgabe Level 1**\n\nSchreibe ein Notenprogramm:\n\n1. Lies **3 Arbeitspunkte** (0–100) mit `input()` ein und wandle sie in Zahlen um.\n2. Berechne den **Durchschnitt**.\n3. Vergib mit `if`/`elif`/`else` eine **Note**:\n   - ≥ 92 → `sehr gut`\n   - ≥ 81 → `gut`\n   - ≥ 67 → `befriedigend`\n   - sonst → `nicht bestanden`\n4. Gib **Durchschnitt** und **Note** aus (z. B. mit f-String).\n\n**Test-Eingaben beim Prüfen:** `85`, `72`, `91`",
+    "starterCode": "# Lies 3 Punktzahlen ein, berechne den Durchschnitt und gib die Note aus.\n\n",
+    "mockInputs": ["85", "72", "91"],
+    "tips": [
+      "Nach jeder `if`-Bedingung braucht Python einen **Doppelpunkt** `:` – und der Funktions-/Schleifenkörper wird eingerückt.",
+      "Denk an `int(input(...))` oder `float(input(...))` – `input()` liefert immer einen **String**.",
+      "Der Durchschnitt von 85, 72 und 91 ist **82.7** – ab 81 Punkten gilt die Note **gut**."
+    ],
+    "validation": {
+      "requiredInOutput": ["gut"],
+      "requiredNumbers": [82.7],
+      "requireInCode": ["if", "input"]
+    }
+  },
+  {
+    "id": "ex-l1-02",
+    "levelId": 1,
+    "order": 2,
+    "title": "Zahlen-Jäger in der Liste",
+    "pytoIntroMessage": "Oh, irgendwas stimmt hier nicht … **31** war doch der heißeste Wert – das sehe ich auf den ersten Blick!",
+    "task": "**Experten-Aufgabe Level 1**\n\nGegeben ist die Liste `werte` (bereits im Editor).\n\nMit **einer `for`-Schleife** (ohne `max()`/`min()`):\n\n1. **Summe** und **Durchschnitt** berechnen\n2. **Höchsten** und **niedrigsten** Wert finden\n3. Zählen, wie viele Werte **≥ 20** sind\n4. Alles übersichtlich mit `print()` ausgeben\n\n**Erwartete Werte:** Summe **128**, Durchschnitt **16.0**, Maximum **31**, Minimum **9**, Anzahl ≥ 20: **4**",
+    "starterCode": "werte = [14, 22, 18, 9, 27, 15, 31, 12]\n\n# Summe, Durchschnitt, Max, Min und Anzahl >= 20:\n",
+    "mockInputs": [],
+    "tips": [
+      "Nutze eine Variable `summe = 0` und addiere in der Schleife: `summe = summe + wert`.",
+      "Für Maximum/Minimum: vergleiche jeden `wert` mit deiner bisher besten Zahl – starte z. B. mit `werte[0]`.",
+      "Die Summe ist **128**, der Durchschnitt **16.0** – teile die Summe durch `len(werte)`."
+    ],
+    "validation": {
+      "requiredInOutput": ["128", "16", "31", "9", "4"],
+      "requireInCode": ["for"]
+    }
+  },
+  {
+    "id": "ex-l2-01",
+    "levelId": 2,
+    "order": 1,
+    "title": "Rabatt-Rechner",
+    "pytoIntroMessage": "Oh, irgendwas stimmt hier nicht … **20 % Rabatt** auf 100 € – das sind doch **80 €**, oder?",
+    "task": "**Experten-Aufgabe Level 2**\n\nSchreibe eine Funktion `berechne_rabatt(preis, prozent)`:\n\n- Sie soll den **Endpreis nach Rabatt** zurückgeben.\n- Formel: `preis * (1 - prozent / 100)`\n\nTeste am Ende mit:\n```python\nprint(berechne_rabatt(100, 20))\nprint(berechne_rabatt(50, 10))\n```\n\n**Erwartete Ausgabe:** `80.0` und `45.0` (jeweils eine Zeile)",
+    "starterCode": "def berechne_rabatt(preis, prozent):\n    # Endpreis nach Rabatt zurückgeben\n    pass\n\nprint(berechne_rabatt(100, 20))\nprint(berechne_rabatt(50, 10))\n",
+    "mockInputs": [],
+    "tips": [
+      "Starte mit `def berechne_rabatt(preis, prozent):` – vergiss den **Doppelpunkt** nicht.",
+      "20 % Rabatt heißt: du zahlst **80 %** vom Preis → `preis * (1 - prozent / 100)`.",
+      "Vergiss **`return`** – ohne Rückgabe liefert die Funktion `None` statt `80.0`."
+    ],
+    "validation": {
+      "requiredLines": ["80", "45"],
+      "requireInCode": ["def", "return"]
+    }
+  },
+  {
+    "id": "ex-l2-02",
+    "levelId": 2,
+    "order": 2,
+    "title": "Positive Zahlen filtern",
+    "pytoIntroMessage": "Oh, irgendwas stimmt hier nicht … Es gibt **4 positive** Zahlen in der Liste – zähle mit!",
+    "task": "**Experten-Aufgabe Level 2**\n\nGegeben ist `zahlen` (im Editor).\n\nSchreibe eine Funktion `zaehle_positive(werte)`, die mit einer **`for`-Schleife** zählt, wie viele Werte **größer als 0** sind, und die **Anzahl zurückgibt**.\n\nTeste mit:\n```python\nprint(zaehle_positive(zahlen))\n```\n\n**Erwartete Ausgabe:** `4`",
+    "starterCode": "zahlen = [3, -1, 0, 7, -4, 12, 5]\n\ndef zaehle_positive(werte):\n    # Anzahl Werte > 0 zählen\n    pass\n\nprint(zaehle_positive(zahlen))\n",
+    "mockInputs": [],
+    "tips": [
+      "Initialisiere einen **Zähler** `anzahl = 0` vor der Schleife.",
+      "In der Schleife: `if wert > 0:` → dann `anzahl += 1` (oder `anzahl = anzahl + 1`).",
+      "Die Liste hat die positiven Werte **3, 7, 12, 5** → Ergebnis **4**."
+    ],
+    "validation": {
+      "requiredLines": ["4"],
+      "requireInCode": ["def", "for", "return"]
+    }
+  },
+  {
+    "id": "ex-l3-01",
+    "levelId": 3,
+    "order": 1,
+    "title": "Sichere Division",
+    "pytoIntroMessage": "Oh, irgendwas stimmt hier nicht … Division durch **0**? Was soll da schon passieren …",
+    "task": "**Experten-Aufgabe Level 3**\n\nSchreibe `sichere_division(a, b)`:\n\n- Gib `a / b` zurück.\n- Bei **Division durch 0** soll die Funktion **`0` zurückgeben** (mit `try`/`except`).\n\nTeste mit:\n```python\nprint(sichere_division(10, 2))\nprint(sichere_division(10, 0))\nprint(sichere_division(8, 4))\n```\n\n**Erwartete Ausgabe:** `5.0`, `0`, `2.0`",
+    "starterCode": "def sichere_division(a, b):\n    # try/except für ZeroDivisionError\n    pass\n\nprint(sichere_division(10, 2))\nprint(sichere_division(10, 0))\nprint(sichere_division(8, 4))\n",
+    "mockInputs": [],
+    "tips": [
+      "Nutze `try:` für `return a / b` und fange **`except ZeroDivisionError:`** ab.",
+      "Im `except`-Block: `return 0` – nicht `print`, sondern **zurückgeben**.",
+      "`10 / 2` → **5.0**, `10 / 0` → **0**, `8 / 4` → **2.0**."
+    ],
+    "validation": {
+      "requiredLines": ["5", "0", "2"],
+      "requireInCode": ["try", "except", "return"]
+    }
+  },
+  {
+    "id": "ex-l3-02",
+    "levelId": 3,
+    "order": 2,
+    "title": "Alter prüfen mit Exception",
+    "pytoIntroMessage": "Oh, irgendwas stimmt hier nicht … **-5 Jahre** alt? Da stimmt was mit dem Formular nicht!",
+    "task": "**Experten-Aufgabe Level 3**\n\nSchreibe `pruefe_alter(alter)`:\n\n- Ist `alter < 0`, wirf **`ValueError`** mit der Meldung `\"Ungültiges Alter\"`.\n- Sonst gib den Text `\"Alter ok: \" + str(alter)` zurück.\n\nTeste mit:\n```python\nprint(pruefe_alter(16))\ntry:\n    pruefe_alter(-1)\nexcept ValueError as e:\n    print(e)\n```\n\n**Erwartete Ausgabe:**\n- Zeile 1: `Alter ok: 16`\n- Zeile 2: `Ungültiges Alter`",
+    "starterCode": "def pruefe_alter(alter):\n    # Bei negativem Alter ValueError werfen\n    pass\n\nprint(pruefe_alter(16))\ntry:\n    pruefe_alter(-1)\nexcept ValueError as e:\n    print(e)\n",
+    "mockInputs": [],
+    "tips": [
+      "Mit `if alter < 0:` prüfen und dann **`raise ValueError(\"Ungültiges Alter\")`**.",
+      "Im Erfolgsfall: `return \"Alter ok: \" + str(alter)` – oder ein f-String.",
+      "Der Test fängt den Fehler mit `except ValueError as e:` ab und gibt **Ungültiges Alter** aus."
+    ],
+    "validation": {
+      "requiredInOutput": ["Alter ok: 16", "Ungültiges Alter"],
+      "requireInCode": ["raise", "ValueError"]
+    }
+  }
+]

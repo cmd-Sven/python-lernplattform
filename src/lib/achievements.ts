@@ -60,3 +60,26 @@ export function normalizeMazeCompletedLevels(levels: number[] | undefined): numb
   if (!levels?.length) return [];
   return [...new Set(levels.filter((id) => id >= 1 && id <= 4))].sort((a, b) => a - b);
 }
+
+/** Experten-Orden: Ordner pro Level */
+export function getExpertMedalIcon(levelId: number): string {
+  switch (levelId) {
+    case 1:
+      return "📁";
+    case 2:
+      return "📂";
+    case 3:
+      return "🗂️";
+    default:
+      return "🏅";
+  }
+}
+
+export function getExpertMedalTitle(levelId: number): string {
+  return `Experten Level ${levelId} abgeschlossen`;
+}
+
+export function normalizeExpertCompletedLevels(levels: number[] | undefined): number[] {
+  if (!levels?.length) return [];
+  return [...new Set(levels.filter((id) => id >= 1 && id <= 3))].sort((a, b) => a - b);
+}

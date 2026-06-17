@@ -6,7 +6,7 @@ import {
   getPublishedLessons,
   upsertLearnerRecord,
 } from "@/lib/data";
-import { normalizeMazeCompletedLevels } from "@/lib/achievements";
+import { normalizeExpertCompletedLevels, normalizeMazeCompletedLevels } from "@/lib/achievements";
 import { buildLearnerBoard, type LessonMeta } from "@/lib/learnerBoard";
 import type { LessonProgress } from "@/lib/types";
 
@@ -42,12 +42,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { visitorId, displayName, lessonProgress, mazeCompletedLevels, pcepChallengeCompleted } = body as {
+  const { visitorId, displayName, lessonProgress, mazeCompletedLevels, pcepChallengeCompleted, expertCompletedLevels } = body as {
     visitorId?: string;
     displayName?: string;
     lessonProgress?: LessonProgress[];
     mazeCompletedLevels?: number[];
     pcepChallengeCompleted?: boolean;
+    expertCompletedLevels?: number[];
   };
 
   if (!visitorId?.trim()) {
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
     lessonProgress,
     normalizeMazeCompletedLevels(mazeCompletedLevels),
     Boolean(pcepChallengeCompleted),
+    normalizeExpertCompletedLevels(expertCompletedLevels),
   );
 
   return NextResponse.json({ ok: true });

@@ -1,5 +1,7 @@
 import AchievementBadge from "./AchievementBadge";
 import {
+  getExpertMedalIcon,
+  getExpertMedalTitle,
   getLessonMedalIcon,
   getLessonMedalTitle,
   getMazeMedalIcon,
@@ -11,6 +13,7 @@ import {
 interface AchievementMedalsRowProps {
   lessonMedals?: number[];
   mazeMedals?: number[];
+  expertMedals?: number[];
   pcepChallengeMedal?: boolean;
   size?: "sm" | "md";
   className?: string;
@@ -19,14 +22,23 @@ interface AchievementMedalsRowProps {
 export default function AchievementMedalsRow({
   lessonMedals = [],
   mazeMedals = [],
+  expertMedals = [],
   pcepChallengeMedal = false,
   size = "sm",
   className = "",
 }: AchievementMedalsRowProps) {
   const lessons = [...lessonMedals].sort((a, b) => a - b);
   const mazes = [...mazeMedals].sort((a, b) => a - b);
+  const experts = [...expertMedals].sort((a, b) => a - b);
 
-  if (lessons.length === 0 && mazes.length === 0 && !pcepChallengeMedal) return null;
+  if (
+    lessons.length === 0 &&
+    mazes.length === 0 &&
+    experts.length === 0 &&
+    !pcepChallengeMedal
+  ) {
+    return null;
+  }
 
   return (
     <span className={`achievement-medals-row ${className}`.trim()} aria-label="Orden">
@@ -43,6 +55,14 @@ export default function AchievementMedalsRow({
           key={`maze-${levelId}`}
           icon={getMazeMedalIcon(levelId)}
           title={getMazeMedalTitle(levelId)}
+          size={size}
+        />
+      ))}
+      {experts.map((levelId) => (
+        <AchievementBadge
+          key={`expert-${levelId}`}
+          icon={getExpertMedalIcon(levelId)}
+          title={getExpertMedalTitle(levelId)}
           size={size}
         />
       ))}

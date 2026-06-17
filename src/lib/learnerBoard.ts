@@ -1,6 +1,7 @@
 import { dedupeLearnerBoardEntries } from "./learnerDedup";
 import {
   getCompletedLessonNumbers,
+  normalizeExpertCompletedLevels,
   normalizeMazeCompletedLevels,
 } from "./achievements";
 import { getCompletionCount } from "./lessonCompletion";
@@ -19,6 +20,7 @@ export interface StoredLearner {
   displayName: string;
   lessonProgress: LessonProgress[];
   mazeCompletedLevels?: number[];
+  expertCompletedLevels?: number[];
   pcepChallengeCompleted?: boolean;
   updatedAt: string;
 }
@@ -35,6 +37,7 @@ export interface LearnerBoardEntry {
   label: string;
   lessonMedals: number[];
   mazeMedals: number[];
+  expertMedals: number[];
   pcepChallengeMedal: boolean;
   isCurrentUser?: boolean;
 }
@@ -91,6 +94,7 @@ export function formatLearnerStatus(
   lessons: LessonMeta[],
   mazeCompletedLevels: number[] = [],
   pcepChallengeCompleted = false,
+  expertCompletedLevels: number[] = [],
 ): LearnerBoardEntry | null {
   const sorted = [...lessons].sort((a, b) => a.order - b.order);
   if (sorted.length === 0) return null;
@@ -123,6 +127,7 @@ export function formatLearnerStatus(
     isRepeating,
     lessonMedals: getCompletedLessonNumbers(lessonProgress, lessons),
     mazeMedals: normalizeMazeCompletedLevels(mazeCompletedLevels),
+    expertMedals: normalizeExpertCompletedLevels(expertCompletedLevels),
     pcepChallengeMedal: pcepChallengeCompleted,
     label: buildLearnerLabel(
       displayName,
@@ -149,6 +154,7 @@ export function buildLearnerBoard(
         lessons,
         learner.mazeCompletedLevels,
         Boolean(learner.pcepChallengeCompleted),
+        learner.expertCompletedLevels,
       ),
     )
     .filter((entry): entry is LearnerBoardEntry => entry !== null)

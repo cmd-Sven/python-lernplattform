@@ -17,10 +17,12 @@ export function clearVisitorProgressOnly(): void {
 
   localStorage.removeItem("pcep-visitor-progress");
   localStorage.removeItem("pcep-challenge-progress");
+  localStorage.removeItem("pcep-expert-progress");
   localStorage.removeItem("pcep-announced-lessons");
   clearLocalCodeStorage();
   window.dispatchEvent(new Event(PROGRESS_UPDATED_EVENT));
   window.dispatchEvent(new Event("pcep-challenge-progress-updated"));
+  window.dispatchEvent(new Event("pcep-expert-progress-updated"));
 }
 
 export function acknowledgeProgressReset(resetAt: string): void {
