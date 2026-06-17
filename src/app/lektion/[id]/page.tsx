@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdminPreviewShell from "@/components/AdminPreviewShell";
@@ -12,8 +13,33 @@ import {
   getLessons,
 } from "@/lib/data";
 import { findNextLesson, getLessonNumber } from "@/lib/lessonAccess";
+import { createPageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const lesson = await getLessonById(id);
+  if (!lesson || !lesson.published) {
+    return createPageMetadata({
+      title: "Lektion",
+      description: "Python-Lernkarte zur PCEP-Vorbereitung.",
+      path: `/lektion/${id}`,
+      noIndex: true,
+    });
+  }
+
+  return createPageMetadata({
+    title: lesson.title,
+    description: lesson.description,
+    path: `/lektion/${lesson.id}`,
+    type: "article",
+  });
+}
 
 export default async function LessonPage({
   params,

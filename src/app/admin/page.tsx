@@ -4,12 +4,13 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type { Exercise, Flashcard, GuestbookEntry, Lesson } from "@/lib/types";
 import { linesToMessages, messagesToLines } from "@/lib/pytoTips";
 import Link from "next/link";
+import VisitorStatsPanel from "@/components/admin/VisitorStatsPanel";
 import {
   acknowledgeProgressReset,
   clearVisitorProgressOnly,
 } from "@/lib/progressReset";
 
-type AdminTab = "lektionen" | "karten" | "uebungen" | "spiele" | "fortschritt" | "gaestebuch";
+type AdminTab = "lektionen" | "karten" | "uebungen" | "spiele" | "fortschritt" | "gaestebuch" | "besucher";
 
 type AdminLearner = {
   id: string;
@@ -406,6 +407,7 @@ export default function AdminPage() {
             ["spiele", "Spiele"],
             ["fortschritt", "Fortschritt"],
             ["gaestebuch", "Gästebuch"],
+            ["besucher", "Besucher"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -1189,6 +1191,19 @@ export default function AdminPage() {
             </div>
           </section>
         </div>
+      )}
+
+      {tab === "besucher" && (
+        <section className="card bg-base-100 shadow border border-base-300">
+          <div className="card-body gap-4">
+            <h2 className="card-title">Besucher-Monitor</h2>
+            <p className="text-sm opacity-80">
+              Übersicht eindeutiger Besucher der letzten vier Wochen. Jeder Browser
+              zählt höchstens einmal pro Tag.
+            </p>
+            <VisitorStatsPanel />
+          </div>
+        </section>
       )}
 
       {tab === "gaestebuch" && (

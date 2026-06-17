@@ -1,14 +1,18 @@
+import type { Metadata } from "next";
 import AdminPreviewShell from "@/components/AdminPreviewShell";
 import MazeGame from "@/components/maze/MazeGame";
 import LabyrinthGate from "@/components/maze/LabyrinthGate";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { createPageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Pyto's Labyrinth | PCEP Lernplattform",
-  description: "Steuere Pyto mit Python durch ein Labyrinth mit Fog of War.",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Pyto's Python-Labyrinth",
+  description:
+    "Steuere Pyto mit Python-Code durch ein Labyrinth – Belohnung nach Lektion 2 auf der PCEP Lernplattform.",
+  path: "/labyrinth",
+});
 
 export default async function LabyrinthPage({
   searchParams,

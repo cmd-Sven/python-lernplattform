@@ -1,10 +1,10 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { isStaleLearnerDuplicate } from "./learnerDedup";
+import { isStaleLearnerDuplicate, dedupeStoredLearnersByName, mergeLearnerUpsertPayload } from "./learnerDedup";
 import type { StoredLearner } from "./learnerBoard";
 import type { MazeHighscoreEntry } from "./maze/highscores";
 import { sortMazeHighscores } from "./maze/highscores";
-import type { Exercise, Flashcard, GuestbookEntry, Lesson, LessonProgress, SiteProgress } from "./types";
+import type { Exercise, Flashcard, GuestbookEntry, Lesson, LessonProgress, SiteProgress, VisitorHit, VisitorStatsSummary } from "./types";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase/server";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -16,6 +16,7 @@ const progressPath = path.join(DATA_DIR, "progress.json");
 const learnersPath = path.join(DATA_DIR, "learners.json");
 const mazeScoresPath = path.join(DATA_DIR, "maze-scores.json");
 const guestbookPath = path.join(DATA_DIR, "guestbook.json");
+const visitorHitsPath = path.join(DATA_DIR, "visitor-hits.json");
 
 async function readJson<T>(filePath: string, fallback: T): Promise<T> {
   try {
@@ -495,10 +496,14 @@ export async function getLearnerRecords(): Promise<StoredLearner[]> {
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
-    return (data ?? []).map((row) => mapLearner(row as LearnerRow));
+    return dedupeStoredLearnersByName(
+      (data ?? []).map((row) => mapLearner(row as LearnerRow)),
+    );
   }
 
-  return readJson<StoredLearner[]>(learnersPath, []);
+  return dedupeStoredLearnersByName(
+    await readJson<StoredLearner[]>(learnersPath, []),
+  );
 }
 
 export async function deleteLearnerRecords(ids: string[]): Promise<void> {
@@ -550,7 +555,48 @@ export async function upsertLearnerRecord(
     (a, b) => a - b,
   );
 
-  await pruneStaleLearnerDuplicates(id, trimmedName, lessonProgress);
+  let mergedLessonProgress = lessonProgress;
+  let mergedMazeLevels = normalizedMazeLevels;
+  let mergedExpertLevels = normalizedExpertLevels;
+  let mergedPcepChallenge = pcepChallengeCompleted;
+
+  if (isSupabaseConfigured()) {
+    const { data: existingRow } = await getSupabaseAdmin()
+      .from("pcep_learners")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (existingRow) {
+      const merged = mergeLearnerUpsertPayload(mapLearner(existingRow as LearnerRow), {
+        lessonProgress,
+        mazeCompletedLevels: normalizedMazeLevels,
+        expertCompletedLevels: normalizedExpertLevels,
+        pcepChallengeCompleted,
+      });
+      mergedLessonProgress = merged.lessonProgress;
+      mergedMazeLevels = merged.mazeCompletedLevels;
+      mergedExpertLevels = merged.expertCompletedLevels;
+      mergedPcepChallenge = merged.pcepChallengeCompleted;
+    }
+  } else {
+    const learners = await readJson<StoredLearner[]>(learnersPath, []);
+    const existing = learners.find((learner) => learner.id === id);
+    if (existing) {
+      const merged = mergeLearnerUpsertPayload(existing, {
+        lessonProgress,
+        mazeCompletedLevels: normalizedMazeLevels,
+        expertCompletedLevels: normalizedExpertLevels,
+        pcepChallengeCompleted,
+      });
+      mergedLessonProgress = merged.lessonProgress;
+      mergedMazeLevels = merged.mazeCompletedLevels;
+      mergedExpertLevels = merged.expertCompletedLevels;
+      mergedPcepChallenge = merged.pcepChallengeCompleted;
+    }
+  }
+
+  await pruneStaleLearnerDuplicates(id, trimmedName, mergedLessonProgress);
 
   if (isSupabaseConfigured()) {
     const { data, error } = await getSupabaseAdmin()
@@ -559,10 +605,10 @@ export async function upsertLearnerRecord(
         {
           id,
           display_name: trimmedName,
-          lesson_progress: lessonProgress,
-          maze_completed_levels: normalizedMazeLevels,
-          expert_completed_levels: normalizedExpertLevels,
-          pcep_challenge_completed: pcepChallengeCompleted,
+          lesson_progress: mergedLessonProgress,
+          maze_completed_levels: mergedMazeLevels,
+          expert_completed_levels: mergedExpertLevels,
+          pcep_challenge_completed: mergedPcepChallenge,
           updated_at: updatedAt,
         },
         { onConflict: "id" },
@@ -578,10 +624,10 @@ export async function upsertLearnerRecord(
   const next: StoredLearner = {
     id,
     displayName: trimmedName,
-    lessonProgress,
-    mazeCompletedLevels: normalizedMazeLevels,
-    expertCompletedLevels: normalizedExpertLevels,
-    pcepChallengeCompleted,
+    lessonProgress: mergedLessonProgress,
+    mazeCompletedLevels: mergedMazeLevels,
+    expertCompletedLevels: mergedExpertLevels,
+    pcepChallengeCompleted: mergedPcepChallenge,
     updatedAt,
   };
   const idx = learners.findIndex((learner) => learner.id === id);
@@ -882,5 +928,141 @@ export async function deleteGuestbookEntry(id: string): Promise<void> {
   await writeJson(
     guestbookPath,
     entries.filter((entry) => entry.id !== id),
+  );
+}
+
+type VisitorHitRow = {
+  id: string;
+  visitor_id: string;
+  visit_date: string;
+  path: string;
+  created_at: string;
+};
+
+function mapVisitorHit(row: VisitorHitRow): VisitorHit {
+  return {
+    id: row.id,
+    visitorId: row.visitor_id,
+    visitDate: row.visit_date,
+    path: row.path,
+    createdAt: row.created_at,
+  };
+}
+
+export async function recordVisitorHit(
+  visitorId: string,
+  path = "/",
+): Promise<void> {
+  const trimmedId = visitorId.trim();
+  if (!trimmedId) return;
+
+  const visitDate = new Date().toISOString().slice(0, 10);
+  const normalizedPath = path.trim().slice(0, 120) || "/";
+  const now = new Date().toISOString();
+
+  if (isSupabaseConfigured()) {
+    const { error } = await getSupabaseAdmin()
+      .from("pcep_visitor_hits")
+      .upsert(
+        {
+          visitor_id: trimmedId,
+          visit_date: visitDate,
+          path: normalizedPath,
+          created_at: now,
+        },
+        { onConflict: "visitor_id,visit_date", ignoreDuplicates: true },
+      );
+
+    if (error) throw error;
+    return;
+  }
+
+  const hits = await readJson<VisitorHit[]>(visitorHitsPath, []);
+  const exists = hits.some(
+    (hit) => hit.visitorId === trimmedId && hit.visitDate === visitDate,
+  );
+  if (exists) return;
+
+  hits.push({
+    id: crypto.randomUUID(),
+    visitorId: trimmedId,
+    visitDate,
+    path: normalizedPath,
+    createdAt: now,
+  });
+  await writeJson(visitorHitsPath, hits);
+}
+
+function buildVisitorStatsFromHits(
+  hits: VisitorHit[],
+  weeks = 4,
+): VisitorStatsSummary {
+  const daysBack = weeks * 7;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(today);
+  start.setDate(start.getDate() - (daysBack - 1));
+
+  const byDate = new Map<string, Set<string>>();
+  for (const hit of hits) {
+    const date = hit.visitDate;
+    if (!byDate.has(date)) byDate.set(date, new Set());
+    byDate.get(date)!.add(hit.visitorId);
+  }
+
+  const days: VisitorStatsSummary["days"] = [];
+  for (let i = 0; i < daysBack; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    const key = date.toISOString().slice(0, 10);
+    days.push({
+      date: key,
+      uniqueVisitors: byDate.get(key)?.size ?? 0,
+    });
+  }
+
+  const allVisitorIds = new Set<string>();
+  for (const day of days) {
+    const visitors = byDate.get(day.date);
+    visitors?.forEach((id) => allVisitorIds.add(id));
+  }
+
+  const thisWeek = days.slice(-7).reduce((sum, day) => sum + day.uniqueVisitors, 0);
+  const lastWeek = days.slice(-14, -7).reduce((sum, day) => sum + day.uniqueVisitors, 0);
+
+  return {
+    days,
+    totalUniqueVisitors: allVisitorIds.size,
+    thisWeek,
+    lastWeek,
+    weeks,
+  };
+}
+
+export async function getVisitorStats(weeks = 4): Promise<VisitorStatsSummary> {
+  const daysBack = weeks * 7;
+  const since = new Date();
+  since.setDate(since.getDate() - (daysBack - 1));
+  const sinceKey = since.toISOString().slice(0, 10);
+
+  if (isSupabaseConfigured()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("pcep_visitor_hits")
+      .select("id, visitor_id, visit_date, path, created_at")
+      .gte("visit_date", sinceKey)
+      .order("visit_date", { ascending: true });
+
+    if (error) throw error;
+    return buildVisitorStatsFromHits(
+      (data ?? []).map((row) => mapVisitorHit(row as VisitorHitRow)),
+      weeks,
+    );
+  }
+
+  const hits = await readJson<VisitorHit[]>(visitorHitsPath, []);
+  return buildVisitorStatsFromHits(
+    hits.filter((hit) => hit.visitDate >= sinceKey),
+    weeks,
   );
 }

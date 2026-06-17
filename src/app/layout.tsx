@@ -4,6 +4,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import ThemeScript from "@/components/ThemeScript";
 import VersionBanner from "@/components/VersionBanner";
+import VisitTracker from "@/components/VisitTracker";
+import { rootMetadata } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,9 +19,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PCEP Lernplattform – Python Lernkarten",
-  description:
-    "Öffentliche Lernplattform für die PCEP-Zertifizierung mit digitalen Lernkarten, Lektion für Lektion.",
+  ...rootMetadata,
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-icon", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
@@ -37,6 +41,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-full flex flex-col bg-base-200">
+        <VisitTracker />
         <VersionBanner />
         <Navbar />
         <main className="flex-1">{children}</main>

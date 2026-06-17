@@ -37,7 +37,22 @@ export async function GET(request: Request) {
   ]);
 
   const entries = buildLearnerBoard(learners, lessons, currentVisitorId);
-  return NextResponse.json({ entries, lessons });
+  const savedRecord = currentVisitorId
+    ? learners.find((learner) => learner.id === currentVisitorId)
+    : undefined;
+
+  return NextResponse.json({
+    entries,
+    lessons,
+    savedRecord: savedRecord
+      ? {
+          lessonProgress: savedRecord.lessonProgress,
+          mazeCompletedLevels: savedRecord.mazeCompletedLevels ?? [],
+          expertCompletedLevels: savedRecord.expertCompletedLevels ?? [],
+          pcepChallengeCompleted: Boolean(savedRecord.pcepChallengeCompleted),
+        }
+      : null,
+  });
 }
 
 export async function POST(request: Request) {

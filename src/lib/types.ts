@@ -104,3 +104,24 @@ export interface GuestbookEntry {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface VisitorHit {
+  id: string;
+  visitorId: string;
+  visitDate: string;
+  path: string;
+  createdAt: string;
+}
+
+export interface VisitorDayStat {
+  date: string;
+  uniqueVisitors: number;
+}
+
+export interface VisitorStatsSummary {
+  days: VisitorDayStat[];
+  totalUniqueVisitors: number;
+  thisWeek: number;
+  lastWeek: number;
+  weeks: number;
+}

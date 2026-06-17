@@ -20,7 +20,7 @@ import {
   PROGRESS_UPDATED_EVENT,
   type LessonWithCardCount,
 } from "@/lib/visitorProgress";
-import { scheduleLearnerBoardSync } from "@/lib/learnerSync";
+import { scheduleLearnerBoardSync, restoreLearnerProgressFromServerIfNeeded } from "@/lib/learnerSync";
 import { applyServerProgressResetIfNeeded } from "@/lib/progressReset";
 import { isLabyrinthUnlocked, readMazeProgress } from "@/lib/maze/progress";
 import {
@@ -150,12 +150,17 @@ export default function HomeClient({
       const wasReset = await applyServerProgressResetIfNeeded();
       if (cancelled) return;
 
+      const wasRestored = wasReset
+        ? false
+        : await restoreLearnerProgressFromServerIfNeeded();
+      if (cancelled) return;
+
       const visitor = getVisitorState();
       setName(visitor.name);
       setOnboarded(visitor.onboarded);
       setIsReturning(visitor.returning);
       refreshProgress();
-      if (wasReset) scheduleLearnerBoardSync();
+      if (wasReset || wasRestored) scheduleLearnerBoardSync();
       setHydrated(true);
       setGuestbookSubmitted(hasGuestbookSubmitted());
     })();

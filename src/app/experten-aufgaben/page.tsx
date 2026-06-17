@@ -1,14 +1,18 @@
+import type { Metadata } from "next";
 import AdminPreviewShell from "@/components/AdminPreviewShell";
 import ExpertTasksClient from "@/components/expert/ExpertTasksClient";
 import ExpertTasksGate from "@/components/expert/ExpertTasksGate";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { createPageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Experten-Aufgaben | PCEP Lernplattform",
-  description: "Code schreiben, ausführen und automatisch prüfen lassen – Level 1 bis 3.",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Experten-Aufgaben",
+  description:
+    "Python-Code schreiben, mit Pyodide ausführen und automatisch prüfen lassen – drei Level für Fortgeschrittene.",
+  path: "/experten-aufgaben",
+});
 
 export default async function ExpertTasksPage({
   searchParams,

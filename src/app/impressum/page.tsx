@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Impressum – PCEP Lernplattform",
-  description: "Impressum und Hinweise zur PCEP Lernplattform.",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Impressum",
+  description: "Impressum, Anbieterhinweise und Kontakt zur PCEP Lernplattform.",
+  path: "/impressum",
+});
 
 export default function ImpressumPage() {
   return (

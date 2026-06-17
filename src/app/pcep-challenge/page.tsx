@@ -1,16 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PcepChallengeClient from "@/components/pcepChallenge/PcepChallengeClient";
 import PcepChallengeGate from "@/components/pcepChallenge/PcepChallengeGate";
 import VisitorLessonGate from "@/components/VisitorLessonGate";
 import { getPcepChallengeQuestions } from "@/lib/pcepChallenge/questions";
+import { createPageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "PCEP-Challenge | PCEP Lernplattform",
+export const metadata: Metadata = createPageMetadata({
+  title: "PCEP-Challenge",
   description:
-    "12 zeitgestoppte Prüfungsfragen zur Vorbereitung auf das PCEP-Zertifikat.",
-};
+    "12 zeitgestoppte Prüfungsfragen zur Vorbereitung auf das PCEP-Zertifikat – teste dein Wissen unter Zeitdruck.",
+  path: "/pcep-challenge",
+});
 
 export default async function PcepChallengePage() {
   const questions = await getPcepChallengeQuestions();

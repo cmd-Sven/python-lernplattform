@@ -40,7 +40,7 @@ function readList(): LessonProgress[] {
   }
 }
 
-function writeList(lessonProgress: LessonProgress[]) {
+function writeList(lessonProgress: LessonProgress[], skipSync = false) {
   localStorage.setItem(
     getProgressStorageKey(),
     JSON.stringify({
@@ -49,9 +49,17 @@ function writeList(lessonProgress: LessonProgress[]) {
     }),
   );
   window.dispatchEvent(new Event(PROGRESS_UPDATED_EVENT));
-  if (!isAdminPreviewActive()) {
+  if (!skipSync && !isAdminPreviewActive()) {
     scheduleLearnerBoardSync();
   }
+}
+
+export function replaceLessonProgressList(
+  lessonProgress: LessonProgress[],
+  options?: { skipSync?: boolean },
+): void {
+  if (typeof window === "undefined") return;
+  writeList(lessonProgress, options?.skipSync ?? false);
 }
 
 function getOrCreateLesson(

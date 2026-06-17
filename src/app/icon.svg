@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="PCEP Lernplattform">
+  <rect width="32" height="32" rx="7" fill="#3776AB"/>
+  <path
+    d="M9 22V10h5.4c3.1 0 5.1 1.7 5.1 4.3S17.5 18.6 14.4 18.6H13V22"
+    fill="none"
+    stroke="#FFD43B"
+    stroke-width="2.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="22.2" cy="9.2" r="1.9" fill="#FFD43B"/>
+</svg>
