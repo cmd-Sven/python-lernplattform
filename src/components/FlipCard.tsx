@@ -8,6 +8,8 @@ interface FlipCardProps {
   card: Flashcard;
   flipped: boolean;
   onFlip: () => void;
+  saved: boolean;
+  onToggleSaved: () => void;
 }
 
 function BulbIcon({ className }: { className?: string }) {
@@ -24,14 +26,43 @@ function BulbIcon({ className }: { className?: string }) {
   );
 }
 
-export default function FlipCard({ card, flipped, onFlip }: FlipCardProps) {
+function BookmarkIcon({ filled, className }: { filled: boolean; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={filled ? "0" : "2"}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+export default function FlipCard({ card, flipped, onFlip, saved, onToggleSaved }: FlipCardProps) {
   return (
     <div className="flip-scene w-full">
       <div className={`flip-card-inner ${flipped ? "is-flipped" : ""}`}>
         <div className="flip-card-face flip-card-front card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body justify-between min-h-0">
             <div>
-              <span className="badge badge-outline mb-3">Frage</span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="badge badge-outline">Frage</span>
+                <button
+                  type="button"
+                  className={`btn btn-circle btn-sm btn-ghost ${saved ? "text-warning" : "opacity-40 hover:opacity-100"}`}
+                  onClick={onToggleSaved}
+                  aria-label={saved ? "Merker entfernen" : "Karte merken"}
+                  title={saved ? "Merker entfernen" : "Karte merken – hier nochmal üben"}
+                >
+                  <BookmarkIcon filled={saved} className="w-5 h-5" />
+                </button>
+              </div>
               <RichContent content={card.question} size="lg" className="font-medium" />
             </div>
 
@@ -56,15 +87,26 @@ export default function FlipCard({ card, flipped, onFlip }: FlipCardProps) {
           <div className="card-body min-h-0 overflow-y-auto">
             <div className="flex items-start justify-between gap-2 mb-3">
               <span className="badge badge-primary">Lösung</span>
-              <button
-                type="button"
-                className="btn btn-circle btn-sm btn-ghost"
-                onClick={onFlip}
-                aria-label="Zurück zur Frage"
-                title="Zurück zur Frage"
-              >
-                <BulbIcon className="w-5 h-5" />
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  className={`btn btn-circle btn-sm ${saved ? "btn-warning" : "btn-ghost opacity-60 hover:opacity-100"}`}
+                  onClick={onToggleSaved}
+                  aria-label={saved ? "Merker entfernen" : "Karte merken"}
+                  title={saved ? "Merker entfernen" : "Karte merken – hier nochmal üben"}
+                >
+                  <BookmarkIcon filled={saved} className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-circle btn-sm btn-ghost"
+                  onClick={onFlip}
+                  aria-label="Zurück zur Frage"
+                  title="Zurück zur Frage"
+                >
+                  <BulbIcon className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <RichContent content={card.answer} size="lg" className="font-semibold" />

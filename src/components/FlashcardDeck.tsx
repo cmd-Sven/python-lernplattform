@@ -12,6 +12,8 @@ import {
   getLessonProgress,
   markCardComplete,
   toggleExerciseComplete,
+  toggleSavedCard,
+  getSavedCardIds,
 } from "@/lib/visitorProgress";
 import { isMultipleChoiceCard } from "@/lib/cardFormat";
 import ExerciseGate from "./ExerciseGate";
@@ -34,6 +36,24 @@ interface FlashcardDeckProps {
 }
 
 type ViewMode = "card" | "exercise" | "done";
+
+function BookmarkIcon({ filled, className }: { filled: boolean; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={filled ? "0" : "2"}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
 
 export default function FlashcardDeck({
   lessonId,
@@ -63,6 +83,10 @@ export default function FlashcardDeck({
     setPytoAnswerFeedback(null);
   }, [currentIndex, mode, activeExerciseIndex]);
 
+  const [savedCardIds, setSavedCardIds] = useState<string[]>([]);
+  const [onlySaved, setOnlySaved] = useState(false);
+  const [savedIndex, setSavedIndex] = useState(0);
+
   useEffect(() => {
     const lp = getLessonProgress(lessonId);
     const initial = getInitialLessonState(
@@ -78,13 +102,22 @@ export default function FlashcardDeck({
     setMode(initial.mode);
     setCurrentIndex(initial.cardIndex);
     setActiveExerciseIndex(initial.exerciseIndex);
+    setSavedCardIds(getSavedCardIds(lessonId));
     setReady(true);
   }, [lessonId, cards, exercises]);
 
-  const currentCard = cards[currentIndex];
+  const savedCards = useMemo(
+    () => cards.filter((c) => savedCardIds.includes(c.id)),
+    [cards, savedCardIds],
+  );
+
+  const activeCard = onlySaved ? savedCards[savedIndex] : cards[currentIndex];
+  const activeIndex = onlySaved ? savedIndex : currentIndex;
+  const activeMax = onlySaved ? savedCards.length : cards.length;
+
   const currentExercise =
     activeExerciseIndex !== null ? exercises[activeExerciseIndex] : null;
-  const isMcCard = currentCard ? isMultipleChoiceCard(currentCard) : false;
+  const isMcCard = activeCard ? isMultipleChoiceCard(activeCard) : false;
   const canProceed = hasViewedBack;
 
   const saveCardProgress = useCallback(
@@ -94,6 +127,37 @@ export default function FlashcardDeck({
     },
     [lessonId, cards, exercises],
   );
+
+  const handleToggleSaved = useCallback(() => {
+    if (!activeCard) return;
+    toggleSavedCard(lessonId, activeCard.id);
+    const newIds = getSavedCardIds(lessonId);
+    setSavedCardIds(newIds);
+
+    if (onlySaved && !newIds.includes(activeCard.id)) {
+      const remaining = cards.filter((c) => newIds.includes(c.id));
+      if (remaining.length === 0) {
+        setOnlySaved(false);
+        setFlipped(false);
+        setHasViewedBack(false);
+      } else {
+        setSavedIndex((prev) => Math.min(prev, remaining.length - 1));
+      }
+    }
+  }, [lessonId, activeCard, onlySaved, cards]);
+
+  const toggleSavedMode = useCallback(() => {
+    if (!onlySaved) {
+      setSavedIndex(0);
+      setFlipped(false);
+      setHasViewedBack(false);
+      setOnlySaved(true);
+    } else {
+      setOnlySaved(false);
+      setFlipped(false);
+      setHasViewedBack(false);
+    }
+  }, [onlySaved]);
 
   const handleToggleExerciseComplete = useCallback(() => {
     if (!currentExercise) return;
@@ -137,10 +201,18 @@ export default function FlashcardDeck({
   }, [activeExerciseIndex, cards.length, finishLesson]);
 
   const goNextCard = useCallback(() => {
-    if (!currentCard) return;
+    if (!activeCard) return;
 
-    if (!completedIds.includes(currentCard.id)) {
-      saveCardProgress(currentCard.id);
+    if (onlySaved) {
+      const nextSavedIdx = savedIndex + 1 < savedCards.length ? savedIndex + 1 : 0;
+      setSavedIndex(nextSavedIdx);
+      setFlipped(false);
+      setHasViewedBack(false);
+      return;
+    }
+
+    if (!completedIds.includes(activeCard.id)) {
+      saveCardProgress(activeCard.id);
     }
 
     const exerciseIdx = getExerciseIndexAfterCard(currentIndex, cards.length);
@@ -162,7 +234,10 @@ export default function FlashcardDeck({
     setFlipped(false);
     setHasViewedBack(false);
   }, [
-    currentCard,
+    activeCard,
+    onlySaved,
+    savedIndex,
+    savedCards.length,
     completedIds,
     currentIndex,
     cards.length,
@@ -172,6 +247,15 @@ export default function FlashcardDeck({
   ]);
 
   const goPrevCard = useCallback(() => {
+    if (onlySaved) {
+      if (savedIndex > 0) {
+        setSavedIndex(savedIndex - 1);
+        setFlipped(false);
+        setHasViewedBack(false);
+      }
+      return;
+    }
+
     if (currentIndex === 0) return;
 
     if (currentIndex % CARDS_PER_BLOCK === 0) {
@@ -188,7 +272,7 @@ export default function FlashcardDeck({
     setCurrentIndex(currentIndex - 1);
     setFlipped(false);
     setHasViewedBack(false);
-  }, [currentIndex, exercises]);
+  }, [onlySaved, savedIndex, currentIndex, exercises]);
 
   const restartLesson = useCallback(() => {
     restartLessonProgress(lessonId);
@@ -201,6 +285,7 @@ export default function FlashcardDeck({
     setFlipped(false);
     setHasViewedBack(false);
     setCelebrationOpen(false);
+    setOnlySaved(false);
   }, [lessonId, cards, exercises]);
 
   const completedCount = useMemo(
@@ -266,10 +351,27 @@ export default function FlashcardDeck({
             max={exercises.length}
             label="Übungen"
           />
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 justify-center">
             <button type="button" className="btn btn-primary" onClick={restartLesson}>
               Von vorne wiederholen
             </button>
+            {savedCards.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-warning gap-2"
+                onClick={() => {
+                  setCelebrationOpen(false);
+                  setMode("card");
+                  setOnlySaved(true);
+                  setSavedIndex(0);
+                  setFlipped(false);
+                  setHasViewedBack(false);
+                }}
+              >
+                <BookmarkIcon filled className="w-4 h-4" />
+                Gemerkte üben ({savedCards.length})
+              </button>
+            )}
             <a href="/" className="btn btn-ghost">
               Zur Übersicht
             </a>
@@ -335,40 +437,74 @@ export default function FlashcardDeck({
     );
   }
 
+  const progressLabel = onlySaved
+    ? `Gemerkte Karte ${savedIndex + 1} von ${savedCards.length}`
+    : `Frage ${currentIndex + 1} von ${cards.length}`;
+
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
-      <ProgressBar
-        value={completedCount}
-        max={cards.length}
-        label={`Frage ${currentIndex + 1} von ${cards.length}`}
-      />
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <ProgressBar
+            value={onlySaved ? savedIndex + 1 : completedCount}
+            max={activeMax}
+            label={progressLabel}
+          />
+        </div>
+        {savedCards.length > 0 && (
+          <button
+            type="button"
+            className={`btn btn-sm gap-1.5 shrink-0 ${onlySaved ? "btn-warning" : "btn-outline"}`}
+            onClick={toggleSavedMode}
+            title={onlySaved ? "Zurück zu allen Karten" : "Nur gemerkte Karten wiederholen"}
+          >
+            <BookmarkIcon filled={onlySaved} className="w-4 h-4" />
+            {onlySaved ? "Alle Karten" : `Gemerkte (${savedCards.length})`}
+          </button>
+        )}
+      </div>
+
+      {onlySaved && (
+        <div className="alert alert-warning py-2">
+          <BookmarkIcon filled className="w-4 h-4 shrink-0" />
+          <span className="text-sm">
+            Gemerkte-Karten-Modus – du übst nur die {savedCards.length} markierten Karten.
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-4 items-start">
         <div className="flex-1 min-w-0">
-          {isMcCard ? (
-            <MultipleChoiceCard
-              key={currentCard.id}
-              card={currentCard}
-              onAnsweredCorrectly={() => setHasViewedBack(true)}
-              onAnswerFeedbackChange={setPytoAnswerFeedback}
-            />
-          ) : (
-            <FlipCard
-              key={currentCard.id}
-              card={currentCard}
-              flipped={flipped}
-              onFlip={handleFlip}
-            />
+          {activeCard && (
+            isMcCard ? (
+              <MultipleChoiceCard
+                key={activeCard.id}
+                card={activeCard}
+                onAnsweredCorrectly={() => setHasViewedBack(true)}
+                onAnswerFeedbackChange={setPytoAnswerFeedback}
+              />
+            ) : (
+              <FlipCard
+                key={`${activeCard.id}-${onlySaved ? "saved" : "normal"}`}
+                card={activeCard}
+                flipped={flipped}
+                onFlip={handleFlip}
+                saved={savedCardIds.includes(activeCard.id)}
+                onToggleSaved={handleToggleSaved}
+              />
+            )
           )}
         </div>
         <PytoStickyAside>
-          <PytoTipBuddy
-            key={currentCard.id}
-            card={currentCard}
-            disabled={!isMcCard && !hasViewedBack}
-            answerFeedback={isMcCard ? pytoAnswerFeedback : null}
-            solutionViewed={!isMcCard && hasViewedBack}
-          />
+          {activeCard && (
+            <PytoTipBuddy
+              key={activeCard.id}
+              card={activeCard}
+              disabled={!isMcCard && !hasViewedBack}
+              answerFeedback={isMcCard ? pytoAnswerFeedback : null}
+              solutionViewed={!isMcCard && hasViewedBack}
+            />
+          )}
         </PytoStickyAside>
       </div>
 
@@ -377,7 +513,7 @@ export default function FlashcardDeck({
           type="button"
           className="btn btn-ghost"
           onClick={goPrevCard}
-          disabled={currentIndex === 0}
+          disabled={onlySaved ? savedIndex === 0 : currentIndex === 0}
         >
           Zurück
         </button>
@@ -394,7 +530,7 @@ export default function FlashcardDeck({
                 : "Drehe die Karte mit der Glühbirne um, um fortzufahren"
           }
         >
-          Weiter
+          {onlySaved && savedIndex + 1 >= savedCards.length ? "Von vorne" : "Weiter"}
         </button>
       </div>
     </div>

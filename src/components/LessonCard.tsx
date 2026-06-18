@@ -73,16 +73,24 @@ export default function LessonCard({ lesson }: LessonCardProps) {
           </div>
         )}
 
-        <div className="card-actions justify-end mt-4">
-          {lesson.accessState === "available" ? (
-            <Link href={`/lektion/${lesson.id}`} className="btn btn-primary btn-sm">
-              {lesson.lessonCompleted ? "Wiederholen" : "Lernen"}
-            </Link>
-          ) : (
-            <button type="button" className="btn btn-sm btn-disabled" disabled>
-              {isComingSoon ? "Bald verfügbar" : "Noch gesperrt"}
-            </button>
+        <div className="card-actions justify-between items-center mt-4">
+          {lesson.savedCardCount > 0 && lesson.accessState === "available" && (
+            <span className="badge badge-warning gap-1 text-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3" aria-hidden><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+              {lesson.savedCardCount} gemerkt
+            </span>
           )}
+          <div className="ml-auto">
+            {lesson.accessState === "available" ? (
+              <Link href={`/lektion/${lesson.id}`} className="btn btn-primary btn-sm">
+                {lesson.lessonCompleted ? "Wiederholen" : "Lernen"}
+              </Link>
+            ) : (
+              <button type="button" className="btn btn-sm btn-disabled" disabled>
+                {isComingSoon ? "Bald verfügbar" : "Noch gesperrt"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

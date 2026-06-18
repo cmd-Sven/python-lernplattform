@@ -73,6 +73,7 @@ export interface LessonProgress {
   lessonId: string;
   completedCardIds: string[];
   completedExerciseIds?: string[];
+  savedCardIds?: string[];
   lessonCompleted: boolean;
   completedAt?: string;
   /** Wie oft die Lektion vollständig abgeschlossen wurde. */
@@ -92,6 +93,7 @@ export interface LessonWithStats extends Lesson {
   completedCards: number;
   lessonCompleted: boolean;
   completionCount: number;
+  savedCardCount: number;
 }
 
 export interface GuestbookEntry {

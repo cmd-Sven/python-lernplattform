@@ -159,6 +159,26 @@ export type LessonWithCardCount = Lesson & {
   exerciseCount?: number;
 };
 
+export function toggleSavedCard(lessonId: string, cardId: string): boolean {
+  const list = readList();
+  const lp = getOrCreateLesson(list, lessonId);
+  if (!lp.savedCardIds) lp.savedCardIds = [];
+
+  const idx = lp.savedCardIds.indexOf(cardId);
+  if (idx >= 0) {
+    lp.savedCardIds.splice(idx, 1);
+  } else {
+    lp.savedCardIds.push(cardId);
+  }
+  writeList(list);
+  return idx < 0;
+}
+
+export function getSavedCardIds(lessonId: string): string[] {
+  const lp = readList().find((p) => p.lessonId === lessonId);
+  return lp?.savedCardIds ?? [];
+}
+
 export function enrichLessonsWithProgress(
   lessons: LessonWithCardCount[],
 ): LessonWithStats[] {
@@ -170,6 +190,7 @@ export function enrichLessonsWithProgress(
       completedCards: lp?.completedCardIds.length ?? 0,
       lessonCompleted: hasEverCompletedLesson(lp),
       completionCount: getCompletionCount(lp),
+      savedCardCount: lp?.savedCardIds?.length ?? 0,
     };
   });
 }
