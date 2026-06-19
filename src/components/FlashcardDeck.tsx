@@ -6,6 +6,7 @@ import {
   CARDS_PER_BLOCK,
   getExerciseIndexAfterCard,
   getInitialLessonState,
+  isLastFlowStep,
 } from "@/lib/lessonFlow";
 import {
   restartLessonProgress,
@@ -124,17 +125,26 @@ export default function FlashcardDeck({
     if (activeExerciseIndex === null) return;
 
     const nextCardIndex = (activeExerciseIndex + 1) * CARDS_PER_BLOCK;
-    if (nextCardIndex >= cards.length) {
-      finishLesson();
+    if (nextCardIndex < cards.length) {
+      setCurrentIndex(nextCardIndex);
+      setMode("card");
+      setActiveExerciseIndex(null);
+      setFlipped(false);
+      setHasViewedBack(false);
       return;
     }
 
-    setCurrentIndex(nextCardIndex);
-    setMode("card");
-    setActiveExerciseIndex(null);
-    setFlipped(false);
-    setHasViewedBack(false);
-  }, [activeExerciseIndex, cards.length, finishLesson]);
+    const nextExerciseIndex = activeExerciseIndex + 1;
+    if (nextExerciseIndex < exercises.length) {
+      setActiveExerciseIndex(nextExerciseIndex);
+      setMode("exercise");
+      setFlipped(false);
+      setHasViewedBack(false);
+      return;
+    }
+
+    finishLesson();
+  }, [activeExerciseIndex, cards.length, exercises.length, finishLesson]);
 
   const goNextCard = useCallback(() => {
     if (!currentCard) return;
@@ -317,10 +327,12 @@ export default function FlashcardDeck({
                       : "Hake die Übung ab, um mit den nächsten Fragen fortzufahren"
                 }
               >
-                {activeExerciseIndex + 1 >= exercises.length &&
-                (activeExerciseIndex + 1) * CARDS_PER_BLOCK >= cards.length
+                {isLastFlowStep(cards.length, exercises.length, activeExerciseIndex)
                   ? "Lektion abschließen"
-                  : "Weiter zu den nächsten Fragen"}
+                  : activeExerciseIndex + 1 < exercises.length &&
+                      (activeExerciseIndex + 1) * CARDS_PER_BLOCK >= cards.length
+                    ? "Weiter zur nächsten Übung"
+                    : "Weiter zu den nächsten Fragen"}
               </button>
             </div>
           </div>

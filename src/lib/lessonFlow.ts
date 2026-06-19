@@ -2,6 +2,37 @@ import type { Exercise, Flashcard } from "./types";
 
 export const CARDS_PER_BLOCK = 6;
 
+export function getCardBlockCount(cardCount: number): number {
+  return Math.ceil(cardCount / CARDS_PER_BLOCK);
+}
+
+/** Übungen nach dem letzten Kartenblock (ohne eigene 6 Karten davor). */
+export function getTrailingExerciseStartIndex(
+  cardCount: number,
+  exerciseCount: number,
+): number {
+  const blockCount = getCardBlockCount(cardCount);
+  return exerciseCount > blockCount ? blockCount : exerciseCount;
+}
+
+export function hasMoreLessonContent(
+  cardCount: number,
+  exerciseCount: number,
+  activeExerciseIndex: number,
+): boolean {
+  const nextCardIndex = (activeExerciseIndex + 1) * CARDS_PER_BLOCK;
+  if (nextCardIndex < cardCount) return true;
+  return activeExerciseIndex + 1 < exerciseCount;
+}
+
+export function isLastFlowStep(
+  cardCount: number,
+  exerciseCount: number,
+  activeExerciseIndex: number,
+): boolean {
+  return !hasMoreLessonContent(cardCount, exerciseCount, activeExerciseIndex);
+}
+
 export function getExerciseIndexAfterCard(
   cardIndex: number,
   totalCards?: number,
@@ -33,7 +64,7 @@ export function getInitialLessonState(
     return { mode: "done", cardIndex: 0, exerciseIndex: null };
   }
 
-  const blockCount = Math.ceil(cards.length / CARDS_PER_BLOCK);
+  const blockCount = getCardBlockCount(cards.length);
 
   for (let block = 0; block < blockCount; block++) {
     const start = block * CARDS_PER_BLOCK;
@@ -55,6 +86,18 @@ export function getInitialLessonState(
 
     if (exercise && !completedExerciseIds.includes(exercise.id)) {
       return { mode: "exercise", cardIndex: start, exerciseIndex: block };
+    }
+  }
+
+  const trailingStart = getTrailingExerciseStartIndex(cards.length, exercises.length);
+  for (let exerciseIndex = trailingStart; exerciseIndex < exercises.length; exerciseIndex++) {
+    const exercise = exercises[exerciseIndex];
+    if (!completedExerciseIds.includes(exercise.id)) {
+      return {
+        mode: "exercise",
+        cardIndex: Math.max(0, (blockCount - 1) * CARDS_PER_BLOCK),
+        exerciseIndex,
+      };
     }
   }
 
